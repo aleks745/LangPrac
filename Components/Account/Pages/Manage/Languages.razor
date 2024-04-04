@@ -1,0 +1,146 @@
+﻿@page "/Account/Manage/Languages"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using LangPrac.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject ApplicationDbContext DbContext
+
+<PageTitle>Languages</PageTitle>
+
+<h3>Languages</h3>
+<StatusMessage />
+
+<div class="row">
+    <div class="col-md-0">
+        <!-- ... -->
+    </div>
+    <div class="col-md-6">
+        <h4>Your Languages</h4>
+        @if (userLanguages.Count > 0)
+        {
+            <ul class="list-group">
+                @foreach (var userLanguage in userLanguages)
+                {
+                    <li @key="userLanguage.LanguageId" class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>@userLanguage.Language.LanguageName</strong> - @userLanguage.LanguageLvl
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p>You haven't added any languages yet.</p>
+        }
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-3">
+                <InputSelect @bind-Value="Input.LanguageId" class="form-control">
+                    <option value="">Select a language</option>
+                    @foreach (var language in languages)
+                    {
+                        <option value="@language.LanguageId">@language.LanguageName</option>
+                    }
+                </InputSelect>
+                <label for="language" class="form-label">Language</label>
+                <ValidationMessage For="() => Input.LanguageId" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.LanguageLevel" class="form-control" placeholder="Please enter your language level." />
+                <label for="language-level" class="form-label">Language Level</label>
+                <ValidationMessage For="() => Input.LanguageLevel" class="text-danger" />
+            </div>
+
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private ApplicationUser user = default!;
+    private string? username;
+    private List<Language> languages = new List<Language>();
+    private List<UserLanguage> userLanguages = new List<UserLanguage>();
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        username = await UserManager.GetUserNameAsync(user);
+
+        languages = await DbContext.Languages.ToListAsync();
+        await LoadUserLanguagesAsync();
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        var existingUserLanguage = await DbContext.UserLanguages
+            .FirstOrDefaultAsync(ul => ul.UserId == user.Id && ul.LanguageId == Input.LanguageId);
+
+        if (existingUserLanguage != null)
+        {
+            // Если запись существует, обновляем уровень владения
+            existingUserLanguage.LanguageLvl = Input.LanguageLevel;
+        }
+        else
+        {
+            // Если запись не существует, создаем новую
+            var newUserLanguage = new UserLanguage
+                {
+                    UserId = user.Id,
+                    LanguageId = Input.LanguageId,
+                    LanguageLvl = Input.LanguageLevel
+                };
+            DbContext.UserLanguages.Add(newUserLanguage);
+        }
+
+        // Сохраняем изменения в базе данных
+        await DbContext.SaveChangesAsync();
+
+        var updateResult = await UserManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to update the user.", HttpContext);
+        }
+
+        await SignInManager.RefreshSignInAsync(user);
+        RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+    }
+
+    private async Task LoadUserLanguagesAsync()
+    {
+        userLanguages = await DbContext.UserLanguages
+            .Where(ul => ul.UserId == user.Id)
+            .Include(ul => ul.Language)
+            .ToListAsync();
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [Display(Name = "Language")]
+        public int LanguageId { get; set; }
+
+        [Required]
+        [Display(Name = "Language Level")]
+        public string? LanguageLevel { get; set; }
+    }
+}
