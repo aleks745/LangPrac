@@ -1,31 +1,29 @@
-﻿@page "/auth"
+﻿@page "/Account/search"
 
 @using Microsoft.AspNetCore.Authorization
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
 @using LangPrac.Data
 @using LangPrac.Components.Account
+@using Microsoft.EntityFrameworkCore
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityUserAccessor UserAccessor
 @inject IdentityRedirectManager RedirectManager
+@inject ApplicationDbContext DbContext
 
 @attribute [Authorize]
 
-<PageTitle>Auth</PageTitle>
+<h3>Search</h3>
 
-<h1>You are authenticated</h1>
-
-<AuthorizeView>
-    Hello @username <br />
-    Your phone number is @phoneNumber
-</AuthorizeView>
+Select the language you want to practice
 
 @code {
     private ApplicationUser user = default!;
     private string? username;
-    private string? phoneNumber;
+    private List<Language> languages = new List<Language>();
+    private List<UserLanguage> userLanguages = new List<UserLanguage>();
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -35,6 +33,16 @@
     {
         user = await UserAccessor.GetRequiredUserAsync(HttpContext);
         username = await UserManager.GetUserNameAsync(user);
-        phoneNumber = await UserManager.GetPhoneNumberAsync(user);
+
+        languages = await DbContext.Languages.ToListAsync();
+        await LoadUserLanguagesAsync();
+    }
+
+    private async Task LoadUserLanguagesAsync()
+    {
+        userLanguages = await DbContext.UserLanguages
+            .Where(ul => ul.UserId == user.Id)
+            .Include(ul => ul.Language)
+            .ToListAsync();
     }
 }
