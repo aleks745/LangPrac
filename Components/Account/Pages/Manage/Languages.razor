@@ -29,7 +29,7 @@
                 {
                     <li @key="userLanguage.LanguageId" class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>@userLanguage.Language.LanguageName</strong> - @userLanguage.LanguageLvl
+                            <strong>@userLanguage.Language.LanguageName</strong> - @userLanguage.LanguageLvl (@userLanguage.LanguageType)
                         </div>
                     </li>
                 }
@@ -47,6 +47,15 @@
         <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-3">
+                <InputSelect @bind-Value="Input.LanguageType" class="form-control">
+                    <option value="">Select language type</option>
+                    <option value="Knows">Knows</option>
+                    <option value="Wants to Learn">Wants to Learn</option>
+                </InputSelect>
+                <label for="language-type" class="form-label">Language Type</label>
+                <ValidationMessage For="() => Input.LanguageType" class="text-danger" />
+            </div>
             <div class="form-floating mb-3">
                 <InputSelect @bind-Value="Input.LanguageId" class="form-control">
                     <option value="">Select a language</option>
@@ -99,6 +108,7 @@
         {
             // Если запись существует, обновляем уровень владения
             existingUserLanguage.LanguageLvl = Input.LanguageLevel;
+            existingUserLanguage.LanguageType = Input.LanguageType;
         }
         else
         {
@@ -107,7 +117,8 @@
                 {
                     UserId = user.Id,
                     LanguageId = Input.LanguageId,
-                    LanguageLvl = Input.LanguageLevel
+                    LanguageLvl = Input.LanguageLevel,
+                    LanguageType = Input.LanguageType
                 };
             DbContext.UserLanguages.Add(newUserLanguage);
         }
@@ -142,5 +153,9 @@
         [Required]
         [Display(Name = "Language Level")]
         public string? LanguageLevel { get; set; }
+
+        [Required]
+        [Display(Name = "Language Type")]
+        public string? LanguageType { get; set; }
     }
 }

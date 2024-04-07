@@ -18,6 +18,7 @@
 <h3>Search</h3>
 
 Select the language you want to practice
+<button class="btn btn-primary" type="submit">Download</button>
 
 @code {
     private ApplicationUser user = default!;
@@ -35,14 +36,5 @@ Select the language you want to practice
         username = await UserManager.GetUserNameAsync(user);
 
         languages = await DbContext.Languages.ToListAsync();
-        await LoadUserLanguagesAsync();
-    }
-
-    private async Task LoadUserLanguagesAsync()
-    {
-        userLanguages = await DbContext.UserLanguages
-            .Where(ul => ul.UserId == user.Id)
-            .Include(ul => ul.Language)
-            .ToListAsync();
     }
 }

@@ -7,5 +7,6 @@
         public int LanguageId { get; set; }
         public Language Language { get; set; }
         public string LanguageLvl { get; set; }
+        public string LanguageType { get; set; }
     }
 }
