@@ -1,0 +1,67 @@
+﻿@page "/search"
+
+@using Microsoft.AspNetCore.Authorization
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using LangPrac.Data
+@using LangPrac.Components.Account
+@using Microsoft.EntityFrameworkCore
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+
+@attribute [Authorize]
+
+<h3>Search</h3>
+
+
+<button class="btn btn-primary" @onclick="SearchUsersAsync">Quick Search</button>
+
+@code {
+    private ApplicationUser user = default!;
+    private string? username;
+    private List<UserLanguage> userLanguages = new List<UserLanguage>();
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpContext == null)
+        {
+            HttpContext = HttpContextAccessor.HttpContext;
+        }
+
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        username = await UserManager.GetUserNameAsync(user);
+
+        userLanguages = await DbContext.UserLanguages
+            .Where(ul => ul.UserId == user.Id)
+            .ToListAsync();
+    }
+
+    private async Task SearchUsersAsync()
+{
+        var knownLanguages = userLanguages
+            .Where(ul => ul.LanguageType == "Knows")
+            .Select(ul => ul.LanguageId)
+            .ToList();
+
+        var searchResults = await DbContext.Users
+            .Where(u => u.Id != user.Id)
+            .Where(u => u.UserLanguages.Any(ul =>
+                knownLanguages.Contains(ul.LanguageId) &&
+                ul.LanguageType == "Wants to Learn"))
+            .ToListAsync();
+
+        var userIds = searchResults.Select(u => u.Id).ToList();
+        var userIdsString = string.Join(",", userIds);
+
+        NavigationManager.NavigateTo($"search-results/{userIdsString}");
+    }
+}

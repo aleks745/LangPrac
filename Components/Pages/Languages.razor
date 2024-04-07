@@ -1,15 +1,19 @@
-﻿@page "/Account/Manage/Languages"
+﻿@page "/languages"
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @using LangPrac.Data
+@using LangPrac.Components.Account
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityUserAccessor UserAccessor
 @inject IdentityRedirectManager RedirectManager
 @inject ApplicationDbContext DbContext
+@inject IHttpContextAccessor HttpContextAccessor
+
+E:\Project\LangPrac\Components\Pages\Languages.razor
 
 <PageTitle>Languages</PageTitle>
 
@@ -31,6 +35,7 @@
                         <div>
                             <strong>@userLanguage.Language.LanguageName</strong> - @userLanguage.LanguageLvl (@userLanguage.LanguageType)
                         </div>
+                        <button class="btn btn-danger btn-sm" @onclick="() => DeleteUserLanguageAsync(userLanguage)">Delete</button>
                     </li>
                 }
             </ul>
@@ -92,6 +97,11 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (HttpContext == null)
+        {
+            HttpContext = HttpContextAccessor.HttpContext;
+        }
+
         user = await UserAccessor.GetRequiredUserAsync(HttpContext);
         username = await UserManager.GetUserNameAsync(user);
 
@@ -132,8 +142,8 @@
             RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to update the user.", HttpContext);
         }
 
-        await SignInManager.RefreshSignInAsync(user);
-        RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+        await LoadUserLanguagesAsync();
+        StateHasChanged();
     }
 
     private async Task LoadUserLanguagesAsync()
@@ -142,6 +152,13 @@
             .Where(ul => ul.UserId == user.Id)
             .Include(ul => ul.Language)
             .ToListAsync();
+    }
+
+    private async Task DeleteUserLanguageAsync(UserLanguage userLanguage)
+    {
+        DbContext.UserLanguages.Remove(userLanguage);
+        await DbContext.SaveChangesAsync();
+        await LoadUserLanguagesAsync();
     }
 
     private sealed class InputModel

@@ -25,5 +25,15 @@ namespace LangPrac.Data
                 .WithMany(l => l.UserLanguages)
                 .HasForeignKey(ul => ul.LanguageId);
         }
+
+        public async Task<List<ApplicationUser>> SearchUsers(string userId, int languageId, string languageType)
+        {
+            return await Users
+                .Where(u => u.Id != userId)
+                .Where(u => u.UserLanguages.Any(ul =>
+                    ul.LanguageId == languageId &&
+                    ul.LanguageType != languageType))
+                .ToListAsync();
+        }
     }
 }

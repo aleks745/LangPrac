@@ -1,0 +1,51 @@
+﻿@page "/search-results/{UserIds}"
+
+@using LangPrac.Data
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+
+@inject UserManager<ApplicationUser> UserManager
+@inject ApplicationDbContext DbContext
+@inject IHttpContextAccessor HttpContextAccessor
+
+<h3>Search Results</h3>
+
+@if (Users != null)
+{
+    @if (Users.Count > 0)
+    {
+        <ul class="list-group">
+            @foreach (var user in Users)
+            {
+                <li class="list-group-item">@user.UserName</li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p>No matching users found.</p>
+    }
+}
+
+@code {
+    [Parameter]
+    public string UserIds { get; set; } = string.Empty;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private List<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpContext == null)
+        {
+            HttpContext = HttpContextAccessor.HttpContext;
+        }
+        var userIdList = UserIds.Split(',').ToList();
+
+        Users = await DbContext.Users
+            .Where(u => userIdList.Contains(u.Id))
+            .ToListAsync();
+    }
+}
