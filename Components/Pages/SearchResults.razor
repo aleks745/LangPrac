@@ -17,7 +17,14 @@
         <ul class="list-group">
             @foreach (var user in Users)
             {
-                <li class="list-group-item">@user.UserName</li>
+                <li class="list-group-item">
+                    @user.UserName
+                    <button class="btn btn-primary" @onclick="() => SendInvite(user)" disabled="@(invitationSent.ContainsKey(user.Id) && invitationSent[user.Id])">Invite</button>
+                    @if (invitationSent.ContainsKey(user.Id) && invitationSent[user.Id])
+                    {
+                        <span>Invitation sent!</span>
+                    }
+                </li>
             }
         </ul>
     }
@@ -35,6 +42,7 @@
     private HttpContext HttpContext { get; set; } = default!;
 
     private List<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
+    private Dictionary<string, bool> invitationSent = new Dictionary<string, bool>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -47,5 +55,29 @@
         Users = await DbContext.Users
             .Where(u => userIdList.Contains(u.Id))
             .ToListAsync();
+    }
+
+    private async Task SendInvite(ApplicationUser user)
+    {
+        var notificationForReceiver = new Notification
+            {
+                SenderId = UserManager.GetUserId(HttpContext.User),
+                ReceiverId = user.Id,
+                Message = $"You have been invited by {UserManager.GetUserAsync(HttpContext.User).Result.UserName} to join a chat."
+            };
+
+        var notificationForSender = new Notification
+            {
+                SenderId = UserManager.GetUserId(HttpContext.User),
+                ReceiverId = UserManager.GetUserId(HttpContext.User),
+                Message = $"Your invitation to {user.UserName} has been sent.",
+                Status = "Sent"
+            };
+
+        DbContext.Notifications.AddRange(notificationForReceiver, notificationForSender);
+        await DbContext.SaveChangesAsync();
+
+        // Устанавливаем статус отправки приглашения в true для данного пользователя
+        invitationSent[user.Id] = true;
     }
 }

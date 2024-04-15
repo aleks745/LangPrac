@@ -23,12 +23,14 @@
                 <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
             </NavLink>
         </div>
-
         <AuthorizeView>
             <Authorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="search">
                         <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Search
+                    </NavLink>
+                    <NavLink class="nav-link" href="notifications">
+                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Notifications
                     </NavLink>
                     <NavLink class="nav-link" href="Account/Manage">
                         <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name

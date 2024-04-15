@@ -7,6 +7,5 @@ namespace LangPrac.Data
         public int? Age { get; set; }
         public ICollection<UserLanguage>? UserLanguages { get; set; }
     }
-
 }
         // @context.User.Identity?.Name!

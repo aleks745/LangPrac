@@ -46,17 +46,23 @@
     }
 
     private async Task SearchUsersAsync()
-{
+    {
         var knownLanguages = userLanguages
             .Where(ul => ul.LanguageType == "Knows")
+            .Select(ul => ul.LanguageId)
+            .ToList();
+
+        var wantsToLearnLanguages = userLanguages
+            .Where(ul => ul.LanguageType == "Wants to Learn")
             .Select(ul => ul.LanguageId)
             .ToList();
 
         var searchResults = await DbContext.Users
             .Where(u => u.Id != user.Id)
             .Where(u => u.UserLanguages.Any(ul =>
-                knownLanguages.Contains(ul.LanguageId) &&
-                ul.LanguageType == "Wants to Learn"))
+                wantsToLearnLanguages.Contains(ul.LanguageId) && ul.LanguageType == "Knows") &&
+                u.UserLanguages.Any(ul =>
+                knownLanguages.Contains(ul.LanguageId) && ul.LanguageType == "Wants to Learn"))
             .ToListAsync();
 
         var userIds = searchResults.Select(u => u.Id).ToList();
@@ -64,4 +70,5 @@
 
         NavigationManager.NavigateTo($"search-results/{userIdsString}");
     }
+
 }

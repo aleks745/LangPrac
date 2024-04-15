@@ -1,0 +1,92 @@
+﻿@page "/notifications"
+
+@using Microsoft.AspNetCore.Authorization
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using LangPrac.Data
+@using LangPrac.Components.Account
+@using Microsoft.EntityFrameworkCore
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+
+@attribute [Authorize]
+
+<h3>Notifications</h3>
+
+@if (NotificationList != null)
+{
+    @foreach (var notification in NotificationList)
+    {
+        <div class="notification">
+            <p>@notification.Message</p>
+            <p>Sent: @notification.CreatedAt.ToString("g")</p> <!-- Формат даты и времени -->
+            @if (notification.Status == "Pending")
+            {
+                <button class="btn btn-success" @onclick="() => AcceptInvite(notification)">Принять заявку</button>
+                <button class="btn btn-danger" @onclick="() => DeclineInvite(notification)">Отклонить заявку</button>
+            }
+        </div>
+    }
+}
+
+@code {
+    private ApplicationUser user = default!;
+    private string? username;
+    private List<Notification> NotificationList { get; set; } = new List<Notification>();
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpContext == null)
+        {
+            HttpContext = HttpContextAccessor.HttpContext;
+        }
+
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        username = await UserManager.GetUserNameAsync(user);
+        var currentUserId = UserManager.GetUserId(HttpContext.User);
+
+        await LoadUserNotificationsAsync();
+    }
+
+    private async Task AcceptInvite(Notification notification)
+    {
+        // Логика принятия заявки
+    }
+
+    private async Task DeclineInvite(Notification notification)
+    {
+        DbContext.Notifications.Remove(notification);
+        await DbContext.SaveChangesAsync();
+
+        // Создание уведомления для отправителя о том, что приглашение было отклонено
+        var declineNotification = new Notification
+            {
+                SenderId = notification.ReceiverId,
+                ReceiverId = notification.SenderId,
+                Message = $"Your invitation to {UserManager.FindByIdAsync(notification.ReceiverId).Result.UserName} has been declined.",
+                Status = "Declined"
+            };
+
+        DbContext.Notifications.Add(declineNotification);
+        await DbContext.SaveChangesAsync();
+        await LoadUserNotificationsAsync();
+    }
+
+    private async Task LoadUserNotificationsAsync()
+    {
+        var currentUserId = UserManager.GetUserId(HttpContext.User);
+        NotificationList = await DbContext.Notifications
+            .Where(n => n.ReceiverId == currentUserId && (n.Status == "Pending" || n.Status == "Sent" || n.Status == "Declined"))
+            .ToListAsync();
+        StateHasChanged();
+    }
+}
