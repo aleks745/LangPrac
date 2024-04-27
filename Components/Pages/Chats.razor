@@ -1,0 +1,55 @@
+﻿@page "/chats"
+@using LangPrac.Data
+@using LangPrac.Services
+@using System.Security.Claims
+@using LangPrac.Components.Account
+@inject NavigationManager NavigationManager
+@inject ApplicationDbContext DbContext
+@inject IChatService ChatService
+@inject IHttpContextAccessor HttpContextAccessor
+
+<h3>Chats</h3>
+
+<ul>
+    @foreach (var chat in UserChats)
+    {
+        <li>
+            <a href="/chat/@chat.Id">Chat with @GetOtherUserName(chat)</a>
+            <button class="btn btn-danger" @onclick="() => DeleteChat(chat.Id)">Delete</button>
+        </li>
+    }
+</ul>
+
+@code {
+    private List<Chat> UserChats = new List<Chat>();
+    private string CurrentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        if (httpContext.User.Identity.IsAuthenticated)
+        {
+            CurrentUserId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            UserChats = await ChatService.GetUserChatsAsync(CurrentUserId);
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private string GetOtherUserName(Chat chat)
+    {
+        if (chat.User1 != null && chat.User2 != null)
+        {
+            return chat.User1Id == CurrentUserId ? chat.User2.UserName : chat.User1.UserName;
+        }
+        return string.Empty;
+    }
+
+    private async Task DeleteChat(int chatId)
+    {
+        await ChatService.DeleteChatAsync(chatId);
+        UserChats = await ChatService.GetUserChatsAsync(CurrentUserId);
+    }
+}

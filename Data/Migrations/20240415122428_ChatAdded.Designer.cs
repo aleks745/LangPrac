@@ -4,6 +4,7 @@ using LangPrac.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LangPrac.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240415122428_ChatAdded")]
+    partial class ChatAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,6 +24,21 @@ namespace LangPrac.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("ApplicationUserChat", b =>
+                {
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<long>("ChatsId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("ApplicationUserId", "ChatsId");
+
+                    b.HasIndex("ChatsId");
+
+                    b.ToTable("ApplicationUserChat");
+                });
 
             modelBuilder.Entity("LangPrac.Data.ApplicationUser", b =>
                 {
@@ -92,58 +110,20 @@ namespace LangPrac.Migrations
 
             modelBuilder.Entity("LangPrac.Data.Chat", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("User1Id")
+                    b.Property<string>("Emails")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("User2Id")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("User1Id");
-
-                    b.HasIndex("User2Id");
 
                     b.ToTable("Chats");
-                });
-
-            modelBuilder.Entity("LangPrac.Data.ChatMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ChatId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SenderId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChatId");
-
-                    b.HasIndex("SenderId");
-
-                    b.ToTable("ChatMessages");
                 });
 
             modelBuilder.Entity("LangPrac.Data.Language", b =>
@@ -206,8 +186,9 @@ namespace LangPrac.Migrations
                     b.Property<int>("LanguageId")
                         .HasColumnType("int");
 
-                    b.Property<int>("LanguageLvl")
-                        .HasColumnType("int");
+                    b.Property<string>("LanguageLvl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LanguageType")
                         .IsRequired()
@@ -353,42 +334,66 @@ namespace LangPrac.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("LangPrac.Data.Chat", b =>
+            modelBuilder.Entity("ApplicationUserChat", b =>
                 {
-                    b.HasOne("LangPrac.Data.ApplicationUser", "User1")
+                    b.HasOne("LangPrac.Data.ApplicationUser", null)
                         .WithMany()
-                        .HasForeignKey("User1Id")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("LangPrac.Data.ApplicationUser", "User2")
+                    b.HasOne("LangPrac.Data.Chat", null)
                         .WithMany()
-                        .HasForeignKey("User2Id")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasForeignKey("ChatsId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User1");
-
-                    b.Navigation("User2");
                 });
 
-            modelBuilder.Entity("LangPrac.Data.ChatMessage", b =>
+            modelBuilder.Entity("LangPrac.Data.Chat", b =>
                 {
-                    b.HasOne("LangPrac.Data.Chat", "Chat")
-                        .WithMany("Messages")
-                        .HasForeignKey("ChatId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.OwnsMany("LangPrac.Data.Message", "Messages", b1 =>
+                        {
+                            b1.Property<long>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("bigint");
 
-                    b.HasOne("LangPrac.Data.ApplicationUser", "Sender")
-                        .WithMany()
-                        .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<long>("Id"));
 
-                    b.Navigation("Chat");
+                            b1.Property<long>("ChatId")
+                                .HasColumnType("bigint");
 
-                    b.Navigation("Sender");
+                            b1.Property<string>("Content")
+                                .IsRequired()
+                                .HasMaxLength(4096)
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<DateTime>("DispatchTime")
+                                .HasColumnType("datetime2");
+
+                            b1.Property<bool>("IsRead")
+                                .HasColumnType("bit");
+
+                            b1.Property<string>("SenderEmail")
+                                .IsRequired()
+                                .HasMaxLength(254)
+                                .HasColumnType("varchar");
+
+                            b1.Property<string>("SenderName")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("ChatId");
+
+                            b1.ToTable("Message");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ChatId");
+                        });
+
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("LangPrac.Data.Notification", b =>
@@ -483,11 +488,6 @@ namespace LangPrac.Migrations
             modelBuilder.Entity("LangPrac.Data.ApplicationUser", b =>
                 {
                     b.Navigation("UserLanguages");
-                });
-
-            modelBuilder.Entity("LangPrac.Data.Chat", b =>
-                {
-                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("LangPrac.Data.Language", b =>

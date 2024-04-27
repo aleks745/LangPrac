@@ -1,6 +1,8 @@
 using LangPrac.Components;
 using LangPrac.Components.Account;
 using LangPrac.Data;
+using LangPrac.Hubs;
+using LangPrac.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +17,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 builder.Services.AddHttpContextAccessor();
 
@@ -61,5 +64,6 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+app.MapHub<ChatHub>("/chathub");
 
 app.Run();

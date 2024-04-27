@@ -8,6 +8,8 @@ namespace LangPrac.Data
         public DbSet<Language> Languages { get; set; }
         public DbSet<UserLanguage> UserLanguages { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Chat> Chats { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,6 +39,28 @@ namespace LangPrac.Data
                 .WithMany()
                 .HasForeignKey(n => n.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Chat>()
+                .HasOne(c => c.User1)
+                .WithMany()
+                .HasForeignKey(c => c.User1Id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Chat>()
+                .HasOne(c => c.User2)
+                .WithMany()
+                .HasForeignKey(c => c.User2Id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(m => m.Chat)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(m => m.ChatId);
+
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(m => m.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId);
         }
 
         public async Task<List<ApplicationUser>> SearchUsers(string userId, int languageId, string languageType)
@@ -48,5 +72,6 @@ namespace LangPrac.Data
                     ul.LanguageType != languageType))
                 .ToListAsync();
         }
+
     }
 }

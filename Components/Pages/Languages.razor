@@ -71,9 +71,15 @@
                 <ValidationMessage For="() => Input.LanguageId" class="text-danger" />
             </div>
             <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.LanguageLevel" class="form-control" placeholder="Please enter your language level." />
+                <select @bind="selectedLanguageLvl" placeholder="Please enter your language level.">
+                    @foreach (var lvl in Enum.GetValues(typeof(LanguageLvl)))
+                    {
+                        var enumValue = (LanguageLvl)lvl;
+                        <option value="@enumValue">@enumValue.GetEnumMemberValue()</option>
+                    }
+                </select>
                 <label for="language-level" class="form-label">Language Level</label>
-                <ValidationMessage For="() => Input.LanguageLevel" class="text-danger" />
+                <ValidationMessage For="() => selectedLanguageLvl" class="text-danger" />
             </div>
 
             <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
@@ -86,6 +92,7 @@
     private string? username;
     private List<Language> languages = new List<Language>();
     private List<UserLanguage> userLanguages = new List<UserLanguage>();
+    private LanguageLvl selectedLanguageLvl = LanguageLvl.A1;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -115,7 +122,7 @@
         if (existingUserLanguage != null)
         {
             // Если запись существует, обновляем уровень владения
-            existingUserLanguage.LanguageLvl = Input.LanguageLevel;
+            existingUserLanguage.LanguageLvl = selectedLanguageLvl;
             existingUserLanguage.LanguageType = Input.LanguageType;
         }
         else
@@ -125,7 +132,7 @@
                 {
                     UserId = user.Id,
                     LanguageId = Input.LanguageId,
-                    LanguageLvl = Input.LanguageLevel,
+                    LanguageLvl = selectedLanguageLvl,
                     LanguageType = Input.LanguageType
                 };
             DbContext.UserLanguages.Add(newUserLanguage);
@@ -167,7 +174,7 @@
 
         [Required]
         [Display(Name = "Language Level")]
-        public string? LanguageLevel { get; set; }
+        public LanguageLvl selectedLanguageLvl { get; set; }
 
         [Required]
         [Display(Name = "Language Type")]

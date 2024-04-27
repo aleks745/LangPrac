@@ -8,4 +8,3 @@ namespace LangPrac.Data
         public ICollection<UserLanguage>? UserLanguages { get; set; }
     }
 }
-        // @context.User.Identity?.Name!

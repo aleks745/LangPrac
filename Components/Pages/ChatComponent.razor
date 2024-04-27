@@ -1,0 +1,100 @@
+﻿@page "/chat/{ChatId}"
+@using LangPrac.Data
+@using LangPrac.Services
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+
+@inject IChatService ChatService
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+
+<h3>Chat</h3>
+
+<div class="chat-container">
+    @foreach (var message in Messages)
+    {
+        <div class="message">
+            <strong>@message.Sender.UserName:</strong> @message.Content
+        </div>
+    }
+</div>
+
+<div class="chat-input">
+    <input type="text" @bind="NewMessage" />
+    <button @onclick="SendMessage">Send</button>
+</div>
+
+<button class="btn btn-danger" @onclick="DeleteChat">Delete Chat</button>
+
+@code {
+    [Parameter]
+    public string ChatId { get; set; }
+
+    private HubConnection hubConnection;
+    private List<ChatMessage> Messages = new List<ChatMessage>();
+    private string NewMessage = string.Empty;
+    private string CurrentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        if (httpContext.User.Identity.IsAuthenticated)
+        {
+            CurrentUserId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(NavigationManager.ToAbsoluteUri("/chathub"))
+                .Build();
+
+            hubConnection.On<string, string>("ReceiveMessage", async (userId, message) =>
+            {
+                var sender = await UserManager.FindByIdAsync(userId);
+                var msg = new ChatMessage
+                    {
+                        SenderId = userId,
+                        Content = message,
+                        Timestamp = DateTime.UtcNow,
+                        Sender = sender
+                    };
+                Messages.Add(msg);
+                await InvokeAsync(StateHasChanged);
+            });
+
+            await hubConnection.StartAsync();
+            await hubConnection.InvokeAsync("JoinChat", int.Parse(ChatId));
+
+            var chat = await ChatService.GetChatAsync(int.Parse(ChatId));
+            Messages = chat.Messages.ToList();
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private async Task SendMessage()
+    {
+        if (!string.IsNullOrWhiteSpace(NewMessage))
+        {
+            await hubConnection.InvokeAsync("SendMessage", int.Parse(ChatId), CurrentUserId, NewMessage);
+            NewMessage = string.Empty;
+        }
+    }
+
+    private async Task DeleteChat()
+    {
+        await ChatService.DeleteChatAsync(int.Parse(ChatId));
+        NavigationManager.NavigateTo("/chats");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.InvokeAsync("LeaveChat", int.Parse(ChatId));
+            await hubConnection.DisposeAsync();
+        }
+    }
+}
