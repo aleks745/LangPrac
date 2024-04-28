@@ -19,7 +19,61 @@
 
 <h3>Search</h3>
 
-<button class="btn btn-primary" @onclick="SearchUsersAsync">Quick Search</button>
+<button class="btn btn-primary" @onclick="QuickSearchAsync">Quick Search</button>
+<button class="btn btn-primary" @onclick="ToggleAdvancedSearch">Advanced Search</button>
+
+@if (showAdvancedSearch)
+{
+    <div>
+        <label for="languageToLearn">Language to Learn:</label>
+        <select @bind="selectedLanguageId" id="languageToLearn">
+            @foreach (var language in userLanguages.Where(ul => ul.LanguageType == "Wants to Learn"))
+            {
+                <option value="@language.LanguageId">@language.Language.LanguageName</option>
+            }
+        </select>
+        <br />
+
+        <label for="partnerLanguageLevelFrom">Partner's Language Level From:</label>
+        <select id="partnerLanguageLevelFrom" @bind="partnerLanguageLevelFrom">
+            @foreach (LanguageLvl level in Enum.GetValues(typeof(LanguageLvl)))
+            {
+                <option value="@level" selected="@(level == partnerLanguageLevelFrom)">@level.GetDescription()</option>
+            }
+        </select>
+        <br />
+
+        <label for="partnerLanguageLevelTo">Partner's Language Level To:</label>
+        <select id="partnerLanguageLevelTo" @bind="partnerLanguageLevelTo">
+            @foreach (LanguageLvl level in Enum.GetValues(typeof(LanguageLvl)))
+            {
+                <option value="@level" selected="@(level == partnerLanguageLevelTo)">@level.GetDescription()</option>
+            }
+        </select>
+        <br />
+
+        <label for="ageFrom">Age From:</label>
+        <select id="ageFrom" @bind="ageFrom">
+            @for (int i = 18; i <= 100; i++)
+            {
+                <option value="@i" selected="@(i == ageFrom)">@i</option>
+            }
+        </select>
+        <br />
+
+        <label for="ageTo">Age To:</label>
+        <select id="ageTo" @bind="ageTo">
+            @for (int i = 18; i <= 100; i++)
+            {
+                <option value="@i" selected="@(i == ageTo)">@i</option>
+            }
+        </select>
+        <br />
+
+
+        <button class="btn btn-primary" @onclick="AdvancedSearchAsync">Search</button>
+    </div>
+}
 
 @code {
     private ApplicationUser user = default!;
@@ -28,6 +82,13 @@
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
+
+    private bool showAdvancedSearch = false;
+    private int selectedLanguageId;
+    private LanguageLvl partnerLanguageLevelFrom = LanguageLvl.A1;
+    private LanguageLvl partnerLanguageLevelTo = LanguageLvl.C2;
+    private int? ageFrom = 18;
+    private int? ageTo = 80;
 
     protected override async Task OnInitializedAsync()
     {
@@ -40,11 +101,17 @@
         username = await UserManager.GetUserNameAsync(user);
 
         userLanguages = await DbContext.UserLanguages
+            .Include(ul => ul.Language)
             .Where(ul => ul.UserId == user.Id)
             .ToListAsync();
     }
 
-    private async Task SearchUsersAsync()
+    private void ToggleAdvancedSearch()
+    {
+        showAdvancedSearch = !showAdvancedSearch;
+    }
+
+    private async Task QuickSearchAsync()
     {
         var knownLanguages = userLanguages
             .Where(ul => ul.LanguageType == "Knows")
@@ -68,6 +135,25 @@
         var userIdsString = string.Join(",", userIds);
 
         NavigationManager.NavigateTo($"search-results/{userIdsString}");
+    }
+
+    private async Task AdvancedSearchAsync()
+    {
+        var now = DateOnly.FromDateTime(DateTime.Now);
+        var users = await DbContext.Users
+            .Include(u => u.UserLanguages)
+            .Where(u => u.Id != user.Id)
+            .Where(u => u.UserLanguages.Any(ul => ul.LanguageId == selectedLanguageId &&
+                                                  ul.LanguageType == "Knows" &&
+                                                  ul.LanguageLvl >= partnerLanguageLevelFrom &&
+                                                  ul.LanguageLvl <= partnerLanguageLevelTo))
+            .Where(u => u.DateOfBirth.HasValue &&
+                        now.Year - u.DateOfBirth.Value.Year >= (ageFrom ?? 0) &&  // Преобразовать в возраст и сравнить
+                        now.Year - u.DateOfBirth.Value.Year <= (ageTo ?? 150))    // Преобразовать в возраст и сравнить
+            .ToListAsync();
+
+        var userIds = users.Select(u => u.Id).ToList();
+        NavigationManager.NavigateTo($"search-results/{string.Join(",", userIds)}");
     }
 
 }

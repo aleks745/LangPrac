@@ -17,8 +17,20 @@
         <ul class="list-group">
             @foreach (var user in Users)
             {
+                var userLanguages = user.UserLanguages; // предполагается, что UserLanguages уже загружены
+                var knownLanguage = userLanguages.FirstOrDefault(ul => ul.LanguageType == "Knows");
+                var wantsToLearnLanguage = userLanguages.FirstOrDefault(ul => ul.LanguageType == "Wants to Learn");
                 <li class="list-group-item">
-                    @user.UserName
+                    @user.UserName <br />
+                    @if (knownLanguage != null)
+                    {
+                        <span>@knownLanguage.Language.LanguageName (@knownLanguage.LanguageLvl.GetEnumMemberValue())</span> <br />
+                    }
+                    @if (wantsToLearnLanguage != null)
+                    {
+                        <span>wants to learn @wantsToLearnLanguage.Language.LanguageName (@wantsToLearnLanguage.LanguageLvl.GetEnumMemberValue())</span> <br />
+                    }
+                    <span>Age: @(CalculateAge(user.DateOfBirth)?.ToString() ?? "Unknown")</span> <br />
                     <button class="btn btn-primary" @onclick="() => SendInvite(user)" disabled="@(invitationSent.ContainsKey(user.Id) && invitationSent[user.Id])">Invite</button>
                     @if (invitationSent.ContainsKey(user.Id) && invitationSent[user.Id])
                     {
@@ -33,6 +45,7 @@
         <p>No matching users found.</p>
     }
 }
+
 
 @code {
     [Parameter]
@@ -52,10 +65,31 @@
         }
         var userIdList = UserIds.Split(',').ToList();
 
+        // Загрузка связанных данных о языках пользователя
         Users = await DbContext.Users
             .Where(u => userIdList.Contains(u.Id))
+            .Include(u => u.UserLanguages) // Убедитесь, что UserLanguage связан с User через навигационное свойство
             .ToListAsync();
     }
+
+    // Вспомогательный метод для расчета возраста пользователя
+    private int? CalculateAge(DateOnly? dateOfBirth)
+    {
+        if (!dateOfBirth.HasValue)
+        {
+            return null; // Или возвращайте значение по умолчанию, если ожидается, что возраст всегда будет известен
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var age = today.Year - dateOfBirth.Value.Year;
+        // Если еще не было дня рождения в этом году, отнимаем один год
+        if (dateOfBirth.Value.AddYears(age) > today)
+        {
+            age--;
+        }
+        return age;
+    }
+
 
     private async Task SendInvite(ApplicationUser user)
     {

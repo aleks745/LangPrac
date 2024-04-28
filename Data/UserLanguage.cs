@@ -24,7 +24,7 @@ namespace LangPrac.Data
         B2,
         [EnumMember(Value = "Advanced")]
         C1,
-        [EnumMember(Value = "Proficien")]
+        [EnumMember(Value = "Proficient")]
         C2
     }
 
@@ -38,6 +38,13 @@ namespace LangPrac.Data
                 as EnumMemberAttribute[];
 
             return enumMemberAttribute?.Length > 0 ? enumMemberAttribute[0].Value : enumValue.ToString();
+        }
+
+        public static string GetDescription(this Enum enumValue)
+        {
+            var fieldInfo = enumValue.GetType().GetField(enumValue.ToString());
+            var attributes = fieldInfo.GetCustomAttributes(typeof(EnumMemberAttribute), false) as EnumMemberAttribute[];
+            return attributes?.Length > 0 ? $"{attributes[0].Value} ({enumValue})" : enumValue.ToString();
         }
     }
 }
