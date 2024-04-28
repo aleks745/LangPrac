@@ -1,5 +1,8 @@
+using LangPrac.Components.Pages;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Protocol.Plugins;
+using System.Runtime.Intrinsics.X86;
 
 namespace LangPrac.Data
 {
@@ -40,38 +43,38 @@ namespace LangPrac.Data
                 .HasForeignKey(n => n.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Один чат связан с одним пользователем (User1)
+            // Пользователь(User1) может иметь множество чатов
+            // Внешний ключ User1Id в таблице Chats ссылается на Id в таблице AspNetUsers
+            // При удалении пользователя(User1) связанные чаты не будут удалены (DeleteBehavior.Restrict)
             modelBuilder.Entity<Chat>()
                 .HasOne(c => c.User1)
                 .WithMany()
                 .HasForeignKey(c => c.User1Id)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Аналогично для User2
             modelBuilder.Entity<Chat>()
                 .HasOne(c => c.User2)
                 .WithMany()
                 .HasForeignKey(c => c.User2Id)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Одно сообщение связано с одним чатом
+            // Чат может содержать множество сообщений
+            // Внешний ключ ChatId в таблице ChatMessages ссылается на Id в таблице Chats
             modelBuilder.Entity<ChatMessage>()
                 .HasOne(m => m.Chat)
                 .WithMany(c => c.Messages)
                 .HasForeignKey(m => m.ChatId);
 
+            // Одно сообщение связано с одним пользователем (отправителем)
+            // Пользователь(отправитель) может отправить множество сообщений
+            // Внешний ключ SenderId в таблице ChatMessages ссылается на Id в таблице AspNetUsers
             modelBuilder.Entity<ChatMessage>()
                 .HasOne(m => m.Sender)
                 .WithMany()
                 .HasForeignKey(m => m.SenderId);
         }
-
-        public async Task<List<ApplicationUser>> SearchUsers(string userId, int languageId, string languageType)
-        {
-            return await Users
-                .Where(u => u.Id != userId)
-                .Where(u => u.UserLanguages.Any(ul =>
-                    ul.LanguageId == languageId &&
-                    ul.LanguageType != languageType))
-                .ToListAsync();
-        }
-
     }
 }
