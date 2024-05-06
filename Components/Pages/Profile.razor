@@ -9,6 +9,8 @@
 @using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.WebUtilities
 @using NetcodeHub.Packages.Components.Modal
+@using SixLabors.ImageSharp
+@using SixLabors.ImageSharp.Processing
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityUserAccessor UserAccessor
@@ -48,7 +50,45 @@
     h1, h2, h3, h4, h5 {
         color: #252422;
     }
+
+    .avatar-container {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        border: 1px solid #ccc;
+        border-radius: 50%;
+        overflow: hidden;
+    }
+
+    .avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-placeholder {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        background-color: #f8f9fa;
+        color: #6c757d;
+        font-size: 1.2rem;
+    }
+
+    .avatar-input {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
 </style>
+
 
 <PageTitle>Profile Management</PageTitle>
 
@@ -57,6 +97,19 @@
         <h3>Profile</h3>
         <p>@profileMessage</p>
         <div class="row">
+            <div class="avatar-container">
+                @if (user is not null && user.AvatarImage is not null)
+                {
+                    <img src="@($"data:image/jpeg;base64,{Convert.ToBase64String(user.AvatarImage)}")" alt="Avatar" class="avatar-image" />
+                }
+                else
+                {
+                    <div class="avatar-placeholder">
+                        <span>Upload Avatar</span>
+                    </div>
+                }
+                <InputFile OnChange="@LoadAvatar" accept="image/*" class="avatar-input" />
+            </div>
             <div class="col-md-6">
                 <EditForm Model="ProfileInput" OnValidSubmit="OnValidSubmitProfileAsync">
                     <DataAnnotationsValidator />
@@ -74,6 +127,26 @@
                         <InputDate @bind-Value="ProfileInput.DateOfBirth" class="form-control" placeholder="Please enter your date of birth." />
                         <label for="date-of-birth" class="form-label">Date of birth</label>
                         <ValidationMessage For="() => ProfileInput.DateOfBirth" class="text-danger" />
+                    </div>
+                    <div class="form-floating mb-3">
+                        <InputSelect @bind-Value="ProfileInput.Country" class="form-control">
+                            <option value="">Select your country</option>
+                            @foreach (var country in countries)
+                            {
+                                <option value="@country">@country</option>
+                            }
+                        </InputSelect>
+                        <label for="country" class="form-label">Country</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <InputSelect @bind-Value="ProfileInput.Gender" class="form-control">
+                            <option value="">Select your gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </InputSelect>
+                        <label for="gender" class="form-label">Gender</label>
                     </div>
                     <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
                 </EditForm>
@@ -289,6 +362,8 @@
         ProfileInput.PhoneNumber ??= phoneNumber;
         ProfileInput.DateOfBirth ??= dateOfBirth;
         EmailInput.NewEmail ??= email;
+        ProfileInput.Country ??= user.Country;
+        ProfileInput.Gender ??= user.Gender;
     }
 
     private async Task OnValidSubmitProfileAsync()
@@ -303,6 +378,16 @@
         if (user.DateOfBirth != ProfileInput.DateOfBirth)
         {
             user.DateOfBirth = ProfileInput.DateOfBirth;
+            needsReSignIn = true;
+        }
+        if (user.Country != ProfileInput.Country)
+        {
+            user.Country = ProfileInput.Country;
+            needsReSignIn = true;
+        }
+        if (user.Gender != ProfileInput.Gender)
+        {
+            user.Gender = ProfileInput.Gender;
             needsReSignIn = true;
         }
 
@@ -463,8 +548,6 @@
         }
     }
 
-
-
     // Модальное окно
     public bool IsLanguagesModelOpen { get; set; }
     public bool IsPasswordModelOpen { get; set; }
@@ -474,6 +557,40 @@
     void CloseLanguagesModal() => IsLanguagesModelOpen = false;
     void ClosePasswordModal() => IsPasswordModelOpen = false;
 
+    // Аватарка
+    private async Task LoadAvatar(InputFileChangeEventArgs e)
+    {
+        var maxAllowedSize = 5 * 1024 * 1024; // 5 MB
+
+        using var memoryStream = new MemoryStream();
+        await e.File.OpenReadStream(maxAllowedSize).CopyToAsync(memoryStream);
+
+        if (memoryStream.Length > maxAllowedSize)
+        {
+            // Обработка ошибки: размер файла превышает допустимый
+            return;
+        }
+
+        var imageBytes = memoryStream.ToArray();
+        var resizedImageBytes = await ResizeImageAsync(imageBytes, 200, 200);
+
+        user.AvatarImage = resizedImageBytes;
+        await UserManager.UpdateAsync(user);
+
+        StateHasChanged();
+    }
+
+    private async Task<byte[]> ResizeImageAsync(byte[] imageBytes, int width, int height)
+    {
+        using var image = await Image.LoadAsync(new MemoryStream(imageBytes));
+        image.Mutate(x => x.Resize(new Size(width, height)));
+
+        using var outputStream = new MemoryStream();
+        await image.SaveAsJpegAsync(outputStream);
+
+        return outputStream.ToArray();
+    }
+
     // Формы
     private sealed class ProfileInputModel
     {
@@ -482,6 +599,12 @@
         public string? PhoneNumber { get; set; }
 
         public DateOnly? DateOfBirth { get; set; }
+
+        [Display(Name = "Country")]
+        public string? Country { get; set; }
+
+        [Display(Name = "Gender")]
+        public string? Gender { get; set; }
     }
 
     private sealed class EmailInputModel
@@ -525,4 +648,55 @@
         [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
     }
+
+    // Список стран для выбора
+    private List<string> countries = new List<string>
+{
+    "Albania",
+    "Australia",
+    "Austria",
+    "Belgium",
+    "Brazil",
+    "Bulgaria",
+    "Canada",
+    "China",
+    "Croatia",
+    "Czech Republic",
+    "Denmark",
+    "Egypt",
+    "Finland",
+    "France",
+    "Germany",
+    "Greece",
+    "Hungary",
+    "India",
+    "Ireland",
+    "Italy",
+    "Japan",
+    "Mexico",
+    "Netherlands",
+    "Norway",
+    "Poland",
+    "Portugal",
+    "Romania",
+    "Scotland",
+    "Serbia",
+    "Slovenia",
+    "South Korea",
+    "Spain",
+    "Sweden",
+    "Switzerland",
+    "Thailand",
+    "Turkey",
+    "Ukraine",
+    "United Arab Emirates",
+    "United Kingdom",
+    "United States of America"
+};
 }
+
+<script>
+    window.createImageElement = function () {
+        return document.createElement('img');
+    };
+</script>
