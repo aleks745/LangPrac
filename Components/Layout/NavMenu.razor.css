@@ -1,5 +1,5 @@
 .navbar {
-    background-color: #000; /* Черный фон всей навигационной панели */
+    background-color: #3b426b; /* Черный фон всей навигационной панели */
     color: white;
 }
 
@@ -23,12 +23,13 @@
         display: flex;
         align-items: center;
         line-height: normal;
-        text-align: center; 
+        text-align: center;
         text-decoration: none;
     }
 
         .nav-item .nav-link-custom:hover, .nav-item .nav-link-custom:focus {
-            color: #f97316; /* Оранжевый текст при наведении */
+            color: #c86c51;
+            /*color: #f97316;*/ /* Оранжевый текст при наведении */
         }
 
 .logout-button {

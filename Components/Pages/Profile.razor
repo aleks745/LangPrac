@@ -1,0 +1,528 @@
+﻿@page "/profile"
+@using System.ComponentModel.DataAnnotations
+@using LangPrac.Components.Account.Pages.Manage
+@using Microsoft.AspNetCore.Identity
+@using LangPrac.Data
+@using LangPrac.Components.Account
+@using Microsoft.EntityFrameworkCore
+@using System.Text
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.WebUtilities
+@using NetcodeHub.Packages.Components.Modal
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject ApplicationDbContext DbContext
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+@inject ILogger<ChangePassword> Logger
+
+<style>
+    /* Основной фон страницы */
+    body {
+        background-color: #e0e0ec;
+    }
+
+    /* Центрирование и размер контейнера контента */
+    .content-container {
+        background-color: #e0e0ec;
+        margin: 0 auto; /* центрирование */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .elements {
+        margin: 10px 20% 10px;
+        text-align: center;
+    }
+
+    .row {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    h1, h2, h3, h4, h5 {
+        color: #252422;
+    }
+</style>
+
+<PageTitle>Profile Management</PageTitle>
+
+<div class="content-container">
+    <div class="elements">
+        <h3>Profile</h3>
+        <p>@profileMessage</p>
+        <div class="row">
+            <div class="col-md-6">
+                <EditForm Model="ProfileInput" OnValidSubmit="OnValidSubmitProfileAsync">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger" role="alert" />
+                    <div class="form-floating mb-3">
+                        <input type="text" value="@username" class="form-control" placeholder="Please choose your username." disabled />
+                        <label for="username" class="form-label">Username</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="ProfileInput.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
+                        <label for="phone-number" class="form-label">Phone number</label>
+                        <ValidationMessage For="() => ProfileInput.PhoneNumber" class="text-danger" />
+                    </div>
+                    <div class="form-floating mb-3">
+                        <InputDate @bind-Value="ProfileInput.DateOfBirth" class="form-control" placeholder="Please enter your date of birth." />
+                        <label for="date-of-birth" class="form-label">Date of birth</label>
+                        <ValidationMessage For="() => ProfileInput.DateOfBirth" class="text-danger" />
+                    </div>
+                    <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+                </EditForm>
+            </div>
+        </div>
+
+        <h3>Manage email</h3>
+        <p>@emailMessage</p>
+        <div class="row">
+            <div class="col-md-6">
+                <form @onsubmit="OnSendEmailVerificationAsync" @formname="send-verification" id="send-verification-form">
+                    <AntiforgeryToken />
+                </form>
+                <EditForm Model="EmailInput" OnValidSubmit="OnValidSubmitEmailAsync">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger" role="alert" />
+                    @if (isEmailConfirmed)
+                    {
+                        <div class="form-floating mb-3 input-group">
+                            <input type="text" value="@email" class="form-control" placeholder="Please enter your email." disabled />
+                            <div class="input-group-append">
+                                <span class="h-100 input-group-text text-success font-weight-bold">✓</span>
+                            </div>
+                            <label for="email" class="form-label">Email</label>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="form-floating mb-3">
+                            <input type="text" value="@email" class="form-control" placeholder="Please enter your email." disabled />
+                            <label for="email" class="form-label">Email</label>
+                            <button type="submit" class="btn btn-link" form="send-verification-form">Send verification email</button>
+                        </div>
+                    }
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="EmailInput.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="Please enter new email." />
+                        <label for="new-email" class="form-label">New email</label>
+                        <ValidationMessage For="() => EmailInput.NewEmail" class="text-danger" />
+                    </div>
+                    <button type="submit" class="w-100 btn btn-lg btn-primary">Change email</button>
+                </EditForm>
+    </div>
+</div>
+    </div>
+</div>
+
+@* Модальное окно Languages *@
+<button class="btn btn-info" @onclick="OpenLanguagesModal">Manage languages</button>
+<Modal BootstrapClass="border-success" 
+       CustomStyle="width:650px"
+       Open="IsLanguagesModelOpen">
+
+    <ContentContent>
+        <p class="text-center text-muted">
+            <h3>Languages</h3>
+            <StatusMessage />
+
+            <div class="row">
+                <div class="col-md-0">
+                    <!-- ... -->
+                </div>
+                <div class="col-md-6">
+                    <h4>Your Languages</h4>
+                    @if (userLanguages.Count > 0)
+                    {
+                        <ul class="list-group">
+                            @foreach (var userLanguage in userLanguages)
+                            {
+                                <li @key="userLanguage.LanguageId" class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>@userLanguage.Language.LanguageName</strong> - @userLanguage.LanguageLvl (@userLanguage.LanguageType)
+                                    </div>
+                                    <button class="btn btn-danger btn-sm"  @onclick="() => DeleteUserLanguageAsync(userLanguage)">Delete</button>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p>You haven't added any languages yet.</p>
+                    }
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <EditForm Model="LanguageInput" OnValidSubmit="OnValidSubmitLanguagesAsync">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" role="alert" />
+                        <div class="form-floating mb-3">
+                            <InputSelect @bind-Value="LanguageInput.LanguageType" class="form-control">
+                                <option value="">Select language type</option>
+                                <option value="Knows">Knows</option>
+                                <option value="Wants to Learn">Wants to Learn</option>
+                            </InputSelect>
+                            <label for="language-type" class="form-label">Language Type</label>
+                            <ValidationMessage For="() => LanguageInput.LanguageType" class="text-danger" />
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputSelect @bind-Value="LanguageInput.LanguageId" class="form-control">
+                                <option value="">Select a language</option>
+                                @foreach (var language in languages)
+                                {
+                                    <option value="@language.LanguageId">@language.LanguageName</option>
+                                }
+                            </InputSelect>
+                            <label for="language" class="form-label">Language</label>
+                            <ValidationMessage For="() => LanguageInput.LanguageId" class="text-danger" />
+                        </div>
+                        <div class="form-floating mb-3">
+                            <select @bind="selectedLanguageLvl" placeholder="Please enter your language level.">
+                                @foreach (var lvl in Enum.GetValues(typeof(LanguageLvl)))
+                                {
+                                    var enumValue = (LanguageLvl)lvl;
+                                    <option value="@enumValue">@enumValue.GetEnumMemberValue()</option>
+                                }
+                            </select>
+                            <label for="language-level" class="form-label">Language Level</label>
+                            <ValidationMessage For="() => selectedLanguageLvl" class="text-danger" />
+                        </div>
+
+                        <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+                    </EditForm>
+                </div>
+            </div>
+        </p>
+    </ContentContent>
+    <ButtonTemplate>
+        <div class="d-flex justify-content-center align-content-center">
+            <button class="btn btn-danger btn-sm" @onclick="CloseLanguagesModal">Close</button>
+        </div>
+    </ButtonTemplate>
+</Modal>
+
+@* Модальное окно Password *@
+<button class="btn btn-info" @onclick="OpenPasswordModal">Manage password</button>
+<Modal BootstrapClass="border-success" 
+       CustomStyle="width:650px"
+       Open="IsPasswordModelOpen">
+
+    <ContentContent>
+        <p class="text-center text-muted">
+            <h3>Change password</h3>
+            <p>@passwordMessage</p>
+            <div class="row">
+                <div class="col-md-6">
+                <EditForm Model="PasswordInput" FormName="change-password" OnValidSubmit="OnValidSubmitPasswordAsync">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" role="alert" />
+                        <div class="form-floating mb-3">
+                        <InputText type="password" @bind-Value="PasswordInput.OldPassword" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Please enter your old password." />
+                            <label for="old-password" class="form-label">Old password</label>
+                        <ValidationMessage For="() => PasswordInput.OldPassword" class="text-danger" />
+                        </div>
+                        <div class="form-floating mb-3">
+                        <InputText type="password" @bind-Value="PasswordInput.NewPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Please enter your new password." />
+                            <label for="new-password" class="form-label">New password</label>
+                        <ValidationMessage For="() => PasswordInput.NewPassword" class="text-danger" />
+                        </div>
+                        <div class="form-floating mb-3">
+                        <InputText type="password" @bind-Value="PasswordInput.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Please confirm your new password." />
+                            <label for="confirm-password" class="form-label">Confirm password</label>
+                        <ValidationMessage For="() => PasswordInput.ConfirmPassword" class="text-danger" />
+                        </div>
+                        <button type="submit" class="w-100 btn btn-lg btn-primary">Update password</button>
+                    </EditForm>
+                </div>
+            </div>
+        </p>
+    </ContentContent>
+    <ButtonTemplate>
+        <div class="d-flex justify-content-center align-content-center">
+            <button class="btn btn-danger btn-sm" @onclick="ClosePasswordModal">Close</button>
+        </div>
+    </ButtonTemplate>
+</Modal>
+
+@code {
+    private ApplicationUser user = default!;
+    private string? username;
+    private string? phoneNumber;
+    private DateOnly? dateOfBirth;
+    private string? profileMessage;
+    private string? emailMessage;
+    private string? email;
+    private bool isEmailConfirmed;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private ProfileInputModel ProfileInput { get; set; } = new ProfileInputModel();
+    private LanguageInputModel LanguageInput { get; set; } = new LanguageInputModel();
+    private EmailInputModel EmailInput { get; set; } = new EmailInputModel();
+    private PasswordInputModel PasswordInput { get; set; } = new PasswordInputModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpContext == null)
+        {
+            HttpContext = HttpContextAccessor.HttpContext;
+        }
+
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        username = await UserManager.GetUserNameAsync(user);
+        phoneNumber = await UserManager.GetPhoneNumberAsync(user);
+        dateOfBirth = user.DateOfBirth;
+        email = await UserManager.GetEmailAsync(user);
+        isEmailConfirmed = await UserManager.IsEmailConfirmedAsync(user);
+        languages = await DbContext.Languages.ToListAsync();
+        await LoadUserLanguagesAsync();
+        hasPassword = await UserManager.HasPasswordAsync(user);
+
+        ProfileInput.PhoneNumber ??= phoneNumber;
+        ProfileInput.DateOfBirth ??= dateOfBirth;
+        EmailInput.NewEmail ??= email;
+    }
+
+    private async Task OnValidSubmitProfileAsync()
+    {
+        bool needsReSignIn = false;
+
+        if (user.PhoneNumber != ProfileInput.PhoneNumber)
+        {
+            user.PhoneNumber = ProfileInput.PhoneNumber;
+            needsReSignIn = true;
+        }
+        if (user.DateOfBirth != ProfileInput.DateOfBirth)
+        {
+            user.DateOfBirth = ProfileInput.DateOfBirth;
+            needsReSignIn = true;
+        }
+
+        if (needsReSignIn)
+        {
+            var updateResult = await UserManager.UpdateAsync(user);
+            if (updateResult.Succeeded)
+            {
+                try
+                {
+                    // Только обновляем сессию, если это абсолютно необходимо
+                    await SignInManager.RefreshSignInAsync(user);
+                    profileMessage = "Your profile has been updated successfully.";
+                }
+                catch (Exception ex)
+                {
+                    // Логируем ошибку и сообщаем пользователю
+                    profileMessage = $"An error occurred while updating your profile: {ex.Message}";
+                }
+            }
+            else
+            {
+                profileMessage = "Error: Failed to update the user.";
+            }
+        }
+        else
+        {
+            profileMessage = "No changes detected.";
+        }
+
+        StateHasChanged(); // Обновить UI
+    }
+
+    private async Task OnValidSubmitEmailAsync()
+    {
+        if (EmailInput.NewEmail is null || EmailInput.NewEmail == email)
+        {
+            emailMessage = "Your email is unchanged.";
+            return;
+        }
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        var code = await UserManager.GenerateChangeEmailTokenAsync(user, EmailInput.NewEmail);
+        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmailChange").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = userId, ["email"] = EmailInput.NewEmail, ["code"] = code });
+
+        await EmailSender.SendConfirmationLinkAsync(user, EmailInput.NewEmail, HtmlEncoder.Default.Encode(callbackUrl));
+
+        emailMessage = "Confirmation link to change email sent. Please check your email.";
+    }
+
+    private async Task OnSendEmailVerificationAsync()
+    {
+        if (email is null)
+        {
+            return;
+        }
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
+
+        await EmailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(callbackUrl));
+
+        emailMessage = "Verification email sent. Please check your email.";
+    }
+
+    // Языки
+    private List<Language> languages = new List<Language>();
+    private List<UserLanguage> userLanguages = new List<UserLanguage>();
+    private LanguageLvl selectedLanguageLvl = LanguageLvl.A1;
+
+    private async Task OnValidSubmitLanguagesAsync()
+    {
+        var existingUserLanguage = await DbContext.UserLanguages
+            .FirstOrDefaultAsync(ul => ul.UserId == user.Id && ul.LanguageId == LanguageInput.LanguageId);
+
+        if (existingUserLanguage != null)
+        {
+            // Если запись существует, обновляем уровень владения
+            existingUserLanguage.LanguageLvl = selectedLanguageLvl;
+            existingUserLanguage.LanguageType = LanguageInput.LanguageType;
+        }
+        else
+        {
+            // Если запись не существует, создаем новую
+            var newUserLanguage = new UserLanguage
+                {
+                    UserId = user.Id,
+                    LanguageId = LanguageInput.LanguageId,
+                    LanguageLvl = selectedLanguageLvl,
+                    LanguageType = LanguageInput.LanguageType
+                };
+            DbContext.UserLanguages.Add(newUserLanguage);
+        }
+
+        // Сохраняем изменения в базе данных
+        await DbContext.SaveChangesAsync();
+
+        var updateResult = await UserManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to update the user.", HttpContext);
+        }
+
+        await LoadUserLanguagesAsync();
+        StateHasChanged();
+    }
+
+    private async Task LoadUserLanguagesAsync()
+    {
+        userLanguages = await DbContext.UserLanguages
+            .Where(ul => ul.UserId == user.Id)
+            .Include(ul => ul.Language)
+            .ToListAsync();
+    }
+
+    private async Task DeleteUserLanguageAsync(UserLanguage userLanguage)
+    {
+        DbContext.UserLanguages.Remove(userLanguage);
+        await DbContext.SaveChangesAsync();
+        await LoadUserLanguagesAsync();
+        StateHasChanged();
+    }
+
+    // Пароль
+    private string? passwordMessage;
+    private bool hasPassword;
+
+    private async Task OnValidSubmitPasswordAsync()
+    {
+        var changePasswordResult = await UserManager.ChangePasswordAsync(user, PasswordInput.OldPassword, PasswordInput.NewPassword);
+        if (!changePasswordResult.Succeeded)
+        {
+            passwordMessage = $"Error: {string.Join(",", changePasswordResult.Errors.Select(error => error.Description))}";
+            StateHasChanged(); // Make sure to update the UI if you're in a Blazor component
+            return;
+        }
+
+        try
+        {
+            await SignInManager.RefreshSignInAsync(user);
+            Logger.LogInformation("User changed their password successfully.");
+
+            // Redirect or inform the UI of success after all changes to response are made.
+            RedirectManager.RedirectToCurrentPageWithStatus("Your password has been changed", HttpContext);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("An error occurred: {0}", ex);
+            passwordMessage = "An error occurred while signing in after password change.";
+            StateHasChanged(); // Update UI to reflect the error
+        }
+    }
+
+
+
+    // Модальное окно
+    public bool IsLanguagesModelOpen { get; set; }
+    public bool IsPasswordModelOpen { get; set; }
+
+    void OpenLanguagesModal() => IsLanguagesModelOpen = true;
+    void OpenPasswordModal() => IsPasswordModelOpen = true;
+    void CloseLanguagesModal() => IsLanguagesModelOpen = false;
+    void ClosePasswordModal() => IsPasswordModelOpen = false;
+
+    // Формы
+    private sealed class ProfileInputModel
+    {
+        [Phone]
+        [Display(Name = "Phone number")]
+        public string? PhoneNumber { get; set; }
+
+        public DateOnly? DateOfBirth { get; set; }
+    }
+
+    private sealed class EmailInputModel
+    {
+        [Required]
+        [EmailAddress]
+        [Display(Name = "New email")]
+        public string? NewEmail { get; set; }
+    }
+
+    private sealed class LanguageInputModel
+    {
+        [Required]
+        [Display(Name = "Language")]
+        public int LanguageId { get; set; }
+
+        [Required]
+        [Display(Name = "Language Level")]
+        public LanguageLvl selectedLanguageLvl { get; set; }
+
+        [Required]
+        [Display(Name = "Language Type")]
+        public string? LanguageType { get; set; }
+    }
+
+    private sealed class PasswordInputModel
+    {
+        [Required]
+        [DataType(DataType.Password)]
+        [Display(Name = "Current password")]
+        public string OldPassword { get; set; } = "";
+
+        [Required]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "New password")]
+        public string NewPassword { get; set; } = "";
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm new password")]
+        [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; } = "";
+    }
+}

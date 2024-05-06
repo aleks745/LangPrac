@@ -2,7 +2,8 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    background: linear-gradient(180deg, #282c34 30%, #242424 90%);
+    background: #a3adbf;
+    /*background: linear-gradient(180deg, #282c34 30%, #242424 90%);*/
 }
 
 header {
