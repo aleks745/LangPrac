@@ -8,6 +8,43 @@
 @inject ApplicationDbContext DbContext
 @inject IHttpContextAccessor HttpContextAccessor
 
+<style>
+    .avatar-image {
+        width: 80px; /* размер аватара */
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 15px; /* отступ справа */
+    }
+
+    .list-group-item {
+        display: flex;
+        align-items: center;
+        gap: 20px; /* Добавляет пространство между элементами */
+        padding: 10px;
+        border-bottom: 1px solid #ccc;
+    }
+
+        /* Стиль для текста внутри блоков */
+        .list-group-item div {
+            color: #333; /* темно-серый цвет текста */
+            font-size: 14px; /* размер шрифта */
+        }
+
+    .avatar-placeholder, .avatar-image {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #eee; /* Фон для placeholder */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8em;
+        color: darkgrey;
+    }
+
+</style>
+
 <h3>Search Results</h3>
 
 @if (Users != null)
@@ -21,21 +58,35 @@
                 var knownLanguage = userLanguages.FirstOrDefault(ul => ul.LanguageType == "Knows");
                 var wantsToLearnLanguage = userLanguages.FirstOrDefault(ul => ul.LanguageType == "Wants to Learn");
                 <li class="list-group-item">
-                    @user.UserName <br />
-                    @if (knownLanguage != null)
-                    {
-                        <span>@knownLanguage.Language.LanguageName (@knownLanguage.LanguageLvl.GetEnumMemberValue())</span> <br />
-                    }
-                    @if (wantsToLearnLanguage != null)
-                    {
-                        <span>wants to learn @wantsToLearnLanguage.Language.LanguageName (@wantsToLearnLanguage.LanguageLvl.GetEnumMemberValue())</span> <br />
-                    }
-                    <span>Age: @(CalculateAge(user.DateOfBirth)?.ToString() ?? "Unknown")</span> <br />
-                    <button class="btn btn-primary" @onclick="() => SendInvite(user)" disabled="@(invitationSent.ContainsKey(user.Id) && invitationSent[user.Id])">Invite</button>
-                    @if (invitationSent.ContainsKey(user.Id) && invitationSent[user.Id])
-                    {
-                        <span>Invitation sent!</span>
-                    }
+                    <div>
+                        @if (user.AvatarImage != null)
+                        {
+                            <img src="@($"data:image/jpeg;base64,{Convert.ToBase64String(user.AvatarImage)}")" alt="Avatar" class="avatar-image" />
+                        }
+                        else
+                        {
+                            <div class="avatar-placeholder">No Avatar</div>
+                        }
+                    </div>
+                    <div>
+                        @user.UserName <br />
+                        Country: @(!string.IsNullOrEmpty(user.Country) ? user.Country : "Unknown") <br />
+                        Gender: @(!string.IsNullOrEmpty(user.Gender) ? user.Gender : "Unknown") <br />
+                        @if (knownLanguage != null)
+                        {
+                            <span>@knownLanguage.Language.LanguageName (@knownLanguage.LanguageLvl.GetEnumMemberValue())</span> <br />
+                        }
+                        @if (wantsToLearnLanguage != null)
+                        {
+                            <span>wants to learn @wantsToLearnLanguage.Language.LanguageName (@wantsToLearnLanguage.LanguageLvl.GetEnumMemberValue())</span> <br />
+                        }
+                        <span>Age: @(CalculateAge(user.DateOfBirth)?.ToString() ?? "Unknown")</span> <br />
+                        <button class="btn btn-primary" @onclick="() => SendInvite(user)" disabled="@(invitationSent.ContainsKey(user.Id) && invitationSent[user.Id])">Invite</button>
+                        @if (invitationSent.ContainsKey(user.Id) && invitationSent[user.Id])
+                        {
+                            <span>Invitation sent!</span>
+                        }
+                    </div>
                 </li>
             }
         </ul>

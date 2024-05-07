@@ -15,12 +15,30 @@
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
 
+<style>
+    .alert-warning {
+        margin-top: 10px;
+        color: #856404;
+        background-color: #fff3cd;
+        border-color: #ffeeba;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+</style>
+
 @attribute [Authorize]
 
 <h3>Search</h3>
 
 <button class="btn btn-primary" @onclick="QuickSearchAsync">Quick Search</button>
 <button class="btn btn-primary" @onclick="ToggleAdvancedSearch">Advanced Search</button>
+@if (!string.IsNullOrEmpty(searchMessage))
+{
+    <div class="alert alert-warning" role="alert">
+        @searchMessage
+    </div>
+}
 
 @if (showAdvancedSearch)
 {
@@ -53,23 +71,36 @@
         <br />
 
         <label for="ageFrom">Age From:</label>
-        <select id="ageFrom" @bind="ageFrom">
+        <select id="ageFrom" @bind="ageFrom" disabled="@anyAgeSelected">
             @for (int i = 18; i <= 100; i++)
             {
-                <option value="@i" selected="@(i == ageFrom)">@i</option>
+                <option value="@i">@i</option>
             }
         </select>
         <br />
 
         <label for="ageTo">Age To:</label>
-        <select id="ageTo" @bind="ageTo">
+        <select id="ageTo" @bind="ageTo" disabled="@anyAgeSelected">
             @for (int i = 18; i <= 100; i++)
             {
-                <option value="@i" selected="@(i == ageTo)">@i</option>
+                <option value="@i">@i</option>
             }
         </select>
         <br />
 
+        <label>
+            <input type="checkbox" @bind="anyAgeSelected" /> Любой возраст
+        </label>
+        <br />
+
+        <label for="gender">Gender:</label>
+        <select @bind="selectedGender" id="gender">
+            <option value="">Any</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select>
+        <br />
 
         <button class="btn btn-primary" @onclick="AdvancedSearchAsync">Search</button>
     </div>
@@ -83,12 +114,16 @@
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
 
+    private string searchMessage = "";
     private bool showAdvancedSearch = false;
     private int selectedLanguageId;
     private LanguageLvl partnerLanguageLevelFrom = LanguageLvl.A1;
     private LanguageLvl partnerLanguageLevelTo = LanguageLvl.C2;
     private int? ageFrom = 18;
     private int? ageTo = 80;
+    private bool anyAgeSelected = true; // По умолчанию "Любой возраст" выбран
+    private string selectedGender;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -131,29 +166,57 @@
                 knownLanguages.Contains(ul.LanguageId) && ul.LanguageType == "Wants to Learn"))
             .ToListAsync();
 
-        var userIds = searchResults.Select(u => u.Id).ToList();
-        var userIdsString = string.Join(",", userIds);
-
-        NavigationManager.NavigateTo($"search-results/{userIdsString}");
+        if (searchResults.Count == 0)
+        {
+            searchMessage = "No matching users found.";
+        }
+        else
+        {
+            var userIds = searchResults.Select(u => u.Id).ToList();
+            NavigationManager.NavigateTo($"search-results/{string.Join(",", userIds)}");
+        }
     }
 
     private async Task AdvancedSearchAsync()
     {
         var now = DateOnly.FromDateTime(DateTime.Now);
-        var users = await DbContext.Users
+        var query = DbContext.Users
             .Include(u => u.UserLanguages)
             .Where(u => u.Id != user.Id)
             .Where(u => u.UserLanguages.Any(ul => ul.LanguageId == selectedLanguageId &&
                                                   ul.LanguageType == "Knows" &&
                                                   ul.LanguageLvl >= partnerLanguageLevelFrom &&
-                                                  ul.LanguageLvl <= partnerLanguageLevelTo))
-            .Where(u => u.DateOfBirth.HasValue &&
-                        now.Year - u.DateOfBirth.Value.Year >= (ageFrom ?? 0) &&  // Преобразовать в возраст и сравнить
-                        now.Year - u.DateOfBirth.Value.Year <= (ageTo ?? 150))    // Преобразовать в возраст и сравнить
-            .ToListAsync();
+                                                  ul.LanguageLvl <= partnerLanguageLevelTo));
 
-        var userIds = users.Select(u => u.Id).ToList();
-        NavigationManager.NavigateTo($"search-results/{string.Join(",", userIds)}");
+        // Проверка на выбор опции "Любой возраст"
+        if (!anyAgeSelected)
+        {
+            query = query.Where(u => u.DateOfBirth.HasValue &&
+                                     (now.Year - u.DateOfBirth.Value.Year >= (ageFrom ?? 0) &&
+                                      now.Year - u.DateOfBirth.Value.Year <= (ageTo ?? 150)));
+        }
+
+        // Фильтрация по полу с учетом пользователей с неуказанным полом
+        if (!string.IsNullOrEmpty(selectedGender) && selectedGender != "Any")
+        {
+            query = query.Where(u => u.Gender == selectedGender);
+        }
+        else if (selectedGender == "Any")
+        {
+            query = query.Where(u => string.IsNullOrEmpty(u.Gender) || u.Gender == "Unknown" || u.Gender == "Male" || u.Gender == "Female" || u.Gender == "Other");
+        }
+
+        var users = await query.ToListAsync();
+
+        if (users.Count == 0)
+        {
+            searchMessage = "No matching users found.";
+        }
+        else
+        {
+            var userIds = users.Select(u => u.Id).ToList();
+            NavigationManager.NavigateTo($"search-results/{string.Join(",", userIds)}");
+        }
     }
 
 }
