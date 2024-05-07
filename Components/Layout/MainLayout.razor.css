@@ -14,7 +14,6 @@ header {
 .content {
     flex-grow: 1;
     padding: 20px 0; /* Увеличение отступа сверху и снизу */
-    color: white; /* Светлый текст на темном фоне */
 }
 
 .container {

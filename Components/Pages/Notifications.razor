@@ -14,26 +14,143 @@
 @inject ApplicationDbContext DbContext
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
+@inject IJSRuntime JSRuntime
+
+<style>
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+    .btn-success {
+        background-color: #28a745;
+        color: white;
+    }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+    /* Стили для верхней панели с кнопкой "Удалить все" */
+    .notifications-top-bar {
+        display: flex;
+        justify-content: flex-end; /* Выравнивание элементов справа */
+        align-items: center; /* Вертикальное выравнивание */
+        padding: 10px; /* Отступы внутри бара */
+    }
+
+    .delete-all-container {
+        margin-right: 10px; /* Отступ справа для контейнера с кнопкой */
+    }
+
+    /* Стили кнопки "Удалить все" */
+    .delete-all-btn {
+        padding: 5px 15px; /* Паддинг внутри кнопки */
+        font-size: 0.9em; /* Размер шрифта текста в кнопке */
+        border-radius: 5px; /* Скругление углов кнопки */
+        cursor: pointer; /* Курсор в виде указателя */
+        border: 1px solid transparent; /* Прозрачная граница */
+        transition: background-color 0.2s, border-color 0.2s; /* Анимация изменения цвета */
+    }
+
+    /* Стили контейнера для уведомлений */
+    .notifications-container {
+        display: flex;
+        flex-direction: column; /* Вертикальное выравнивание элементов */
+        align-items: center; /* Центрирование элементов по горизонтали */
+        width: 100%; /* Занимаем всю доступную ширину */
+    }
+
+    /* Базовые стили для всех уведомлений */
+    .notification {
+        border: 1px solid #ddd; /* Легкая рамка для блока */
+        margin-bottom: 15px; /* Отступ между уведомлениями */
+        padding: 10px 15px; /* Внутренние отступы блока */
+        border-radius: 8px; /* Скругление углов блока */
+        background-color: #f9f9f9; /* Цвет фона для уведомления */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Тень для блока */
+        transition: background-color 0.3s; /* Плавное изменение фона при наведении */
+        max-width: 50%; /* Максимальная ширина уведомления */
+        width: 100%; /* Ширина блока уведомления */
+    }
+
+        .notification:hover {
+            background-color: #f1f1f1; /* Цвет фона при наведении */
+        }
+
+        .notification p {
+            margin: 5px 0; /* Отступы для абзацев внутри уведомления */
+            color: #333; /* Цвет текста */
+        }
+
+        /* Стили для даты и времени отправки */
+        .notification time {
+            display: block; /* Блочное отображение */
+            font-size: 0.85em; /* Меньший размер шрифта для времени */
+            color: #666; /* Цвет шрифта для времени */
+        }
+
+        /* Стили для кнопок в уведомлениях */
+        .notification .btn {
+            margin-top: 8px;
+            margin-right: 5px;
+            padding: 5px 10px;
+            font-size: 0.9em;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        /* Индивидуальные стили для различных статусов уведомлений */
+        .notification[data-status="Pending"] {
+            border-color: #ffc107; /* Желтая рамка для ожидающих уведомлений */
+        }
+
+        .notification[data-status="Accepted"] {
+            border-color: #28a745; /* Зеленая рамка для принятых уведомлений */
+            background-color: #e6f9e6; /* Зеленый фон */
+        }
+
+        .notification[data-status="Declined"] {
+            border-color: #dc3545; /* Красная рамка для отклоненных уведомлений */
+            background-color: #f9e6e6; /* Красный фон */
+        }
+</style>
 
 @attribute [Authorize]
 
-<h3>Notifications</h3>
+<div class="notifications-top-bar">
+    <div class="delete-all-container">
+        <button class="btn btn-danger delete-all-btn" @onclick="DeleteAllNotifications">Удалить все</button>
+    </div>
+</div>
 
-@if (NotificationList != null)
-{
-    @foreach (var notification in NotificationList)
+<div class="notifications-container">
+    @if (NotificationList != null && NotificationList.Count > 0)
     {
-        <div class="notification">
-            <p>@notification.Message</p>
-            <p>Sent: @notification.CreatedAt.ToString("g")</p> <!-- Формат даты и времени -->
-            @if (notification.Status == "Pending")
-            {
-                <button class="btn btn-success" @onclick="() => AcceptInvite(notification.Id)">Принять заявку</button>
-                <button class="btn btn-danger" @onclick="() => DeclineInvite(notification)">Отклонить заявку</button>
-            }
-        </div>
+        @foreach (var notification in NotificationList)
+        {
+            <div class="notification" data-status="@notification.Status">
+                <p>@notification.Message</p>
+                <p class="timestamp">Sent: @notification.CreatedAt.ToLocalTime().ToString("g")</p>
+                @if (notification.Status == "Pending")
+                {
+                    <button class="btn btn-success" @onclick="() => AcceptInvite(notification.Id)">Принять заявку</button>
+                    <button class="btn btn-danger" @onclick="() => DeclineInvite(notification)">Отклонить заявку</button>
+                }
+            </div>
+        }
     }
-}
+    else
+    {
+        <p>No notifications to display.</p>
+    }
+</div>
 
 @code {
     private ApplicationUser user = default!;
@@ -77,7 +194,6 @@
         DbContext.Notifications.Remove(notification);
         await DbContext.SaveChangesAsync();
 
-        // Создание уведомления для отправителя о том, что приглашение было отклонено
         var declineNotification = new Notification
             {
                 SenderId = notification.ReceiverId,
@@ -91,11 +207,53 @@
         await LoadUserNotificationsAsync();
     }
 
+    private async Task DeleteAllNotifications()
+    {
+        var currentUserId = UserManager.GetUserId(HttpContext.User);
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            // Log error or handle the case where the user ID is not available
+            Console.WriteLine("Error: User ID is null or empty.");
+            return;
+        }
+
+        var notifications = await DbContext.Notifications
+            .Where(n => n.ReceiverId == currentUserId)
+            .ToListAsync();
+
+        if (notifications == null)
+        {
+            Console.WriteLine("No notifications found for the current user.");
+            return;
+        }
+
+        foreach (var notification in notifications)
+        {
+            if (notification.Status == "Pending")
+            {
+                // Automatically decline the invite if it's pending
+                var declineNotification = new Notification
+                    {
+                        SenderId = notification.ReceiverId,
+                        ReceiverId = notification.SenderId,
+                        Message = $"Your invitation to {UserManager.FindByIdAsync(notification.ReceiverId).Result.UserName} has been declined.",
+                        Status = "Declined"
+                    };
+                DbContext.Notifications.Add(declineNotification);
+            }
+            DbContext.Notifications.Remove(notification);
+        }
+
+        await DbContext.SaveChangesAsync();
+        await LoadUserNotificationsAsync();
+    }
+
     private async Task LoadUserNotificationsAsync()
     {
         var currentUserId = UserManager.GetUserId(HttpContext.User);
         NotificationList = await DbContext.Notifications
-            .Where(n => n.ReceiverId == currentUserId && (n.Status == "Pending" || n.Status == "Sent" || n.Status == "Declined"))
+            .Where(n => n.ReceiverId == currentUserId)
+            .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
         StateHasChanged();
     }
