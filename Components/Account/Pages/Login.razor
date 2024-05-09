@@ -10,52 +10,137 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
+<style>
+    .page {
+        background: url('bg.png') !important;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+        *:focus {
+            outline: none;
+        }
+
+    .lbody {
+        position: relative;
+        width: 100%;
+        min-height: 100vh;
+        height: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-size: cover;
+        background-position: center;
+        font-family: 'roboto', sans-serif;
+    }
+
+    .lform {
+        width: 400px;
+        height: auto;
+        color: #fff;
+        font-family: 'roboto', sans-serif;
+    }
+
+    .lheading {
+        text-align: center;
+        font-size: 80px;
+        font-weight: 300;
+        margin-bottom: 50px;
+    }
+
+    input,
+    .lsubmit-btn {
+        width: 80%;
+        height: 35px;
+        display: block;
+        margin: 20px auto;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.3);
+        border: none;
+        color: #fff;
+        padding: 15px;
+        transition: .5s;
+    }
+
+        input::placeholder {
+            color: #fff;
+        }
+
+        input:focus,
+        .lsubmit-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+            input:focus::placeholder {
+                color: #000;
+            }
+
+    .lsubmit-btn {
+        width: auto;
+        padding: 0 20px;
+        cursor: pointer;
+        margin: 50px auto 0;
+    }
+
+    .llink {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.5);
+        display: block;
+        margin: 30px auto;
+    }
+
+        .llink:hover {
+            color: #fff;
+        }
+
+    .lalert-box {
+        position: absolute;
+        top: -100%;
+        left: 50%;
+        transform: translateX(-50%);
+        min-width: 150px;
+        max-width: 90%;
+        width: auto;
+        height: auto;
+        padding: 10px;
+        background: rgb(255, 119, 119);
+        border-top: 10px solid rgb(255, 37, 37);
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+        color: #fff;
+        font-family: 'roboto', sans-serif;
+        text-align: center;
+        transition: 1s;
+    }
+</style>
+
 <PageTitle>Log in</PageTitle>
 
-<h1>Log in</h1>
-<div class="row">
-    <div class="col-md-4">
-        <section>
-            <StatusMessage Message="@errorMessage" />
-            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
-                <DataAnnotationsValidator />
-                <h2>Use a local account to log in.</h2>
-                <hr />
-                <ValidationSummary class="text-danger" role="alert" />
-                <div class="form-floating mb-3">
-                    <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                    <label for="email" class="form-label">Email</label>
-                    <ValidationMessage For="() => Input.Email" class="text-danger" />
-                </div>
-                <div class="form-floating mb-3">
-                    <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label for="password" class="form-label">Password</label>
-                    <ValidationMessage For="() => Input.Password" class="text-danger" />
-                </div>
-                <div class="checkbox mb-3">
-                    <label class="form-label">
-                        <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
-                        Remember me
-                    </label>
-                </div>
-                <div>
-                    <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <div>
-                    <p>
-                        <a href="Account/ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
-                    </p>
-                    <p>
-                        <a href="Account/ResendEmailConfirmation">Resend email confirmation</a>
-                    </p>
-                </div>
-            </EditForm>
-        </section>
+<div class="lalert-box">
+    <p class="lalert"></p>
+</div>
+
+<div class="lbody">
+    <div class="lform">
+        <h1 class="lheading">Login</h1>
+        <StatusMessage Message="@errorMessage" />
+        <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            <InputText @bind-Value="Input.Email" type="email" class="email" autocomplete="username" aria-required="true" placeholder="Email" />
+            <InputText type="password" @bind-Value="Input.Password" class="password" autocomplete="current-password" aria-required="true" placeholder="Password" />
+            <button class="lsubmit-btn">Log in</button>
+        </EditForm>
+        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" class="llink">Don't have an account? Register one</a>
     </div>
 </div>
+
+
 
 @code {
     private string? errorMessage;
@@ -71,36 +156,29 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (HttpContext.Request.Query.TryGetValue("RegistrationSuccess", out var registrationSuccess) && registrationSuccess == "True")
+        {
+            // Показываем сообщение об успешной регистрации
+            errorMessage = "Registration successful. Please log in.";
+        }
+
         if (HttpMethods.IsGet(HttpContext.Request.Method))
         {
-            // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
         }
     }
 
     public async Task LoginUser()
     {
-        // This doesn't count login failures towards account lockout
-        // To enable password failures to trigger account lockout, set lockoutOnFailure: true
         var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
             RedirectManager.RedirectTo(ReturnUrl);
         }
-        else if (result.RequiresTwoFactor)
-        {
-            RedirectManager.RedirectTo(
-                "Account/LoginWith2fa",
-                new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
-        }
-        else if (result.IsLockedOut)
-        {
-            Logger.LogWarning("User account locked out.");
-            RedirectManager.RedirectTo("Account/Lockout");
-        }
         else
         {
+            Logger.LogWarning("User login attempt failed.");
             errorMessage = "Error: Invalid login attempt.";
         }
     }

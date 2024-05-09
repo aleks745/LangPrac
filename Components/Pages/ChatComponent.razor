@@ -101,7 +101,6 @@ body {
     display: flex;
     justify-content: center;
     padding: 15px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     border-radius: 15px;
     margin: 0 10px; /* Добавьте поля, чтобы оставить немного свободного пространства от краев контейнера чата */
     gap: 10px; /* Добавляет пространство между элементами формы */
@@ -131,28 +130,28 @@ button {
     right: 10px;
 }
 
-<style>
-@@keyframes slideInFromRight {
-    0% {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    100% {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-@@keyframes slideInFromLeft {
-    0% {
-        transform: translateX(-100%);
-        opacity: 0;
-    }
-    100% {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-</style>
+    <style>
+        @@keyframes slideInFromRight {
+            0% {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @@keyframes slideInFromLeft {
+            0% {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
 </style>
 
 <div class="chat-layout">
