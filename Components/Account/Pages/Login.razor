@@ -12,7 +12,15 @@
 
 <style>
     .page {
-        background: url('bg.png') !important;
+        background: url('bgimage.png') no-repeat center center fixed !important;
+        background-size: cover !important; /* Используйте 'cover' для полного покрытия, 'contain' для полного вмещения */
+        height: 100vh !important; /* Устанавливаем высоту вьюпорта на 100% */
+        width: 100vw !important /* Устанавливаем ширину вьюпорта на 100% */
+    }
+
+
+    body {
+        overflow-y: hidden;
     }
 
     * {
@@ -89,7 +97,7 @@
 
     .llink {
         text-align: center;
-        color: rgba(255, 255, 255, 0.5);
+        color: rgba(255, 255, 255, 0.8);
         display: block;
         margin: 30px auto;
     }
@@ -148,6 +156,7 @@
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
 
+
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
@@ -166,6 +175,7 @@
         {
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
         }
+
     }
 
     public async Task LoginUser()
