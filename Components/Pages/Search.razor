@@ -23,15 +23,26 @@
         width: 100vw !important;
     }
 
-    .alert-warning {
-        margin-top: 10px;
-        color: #856404;
-        background-color: #fff3cd;
-        border-color: #ffeeba;
-        padding: 10px;
+    .search-message {
+        position: fixed;
+        top: -50px; /* Начнем с верхней части экрана */
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        background-color: #ffd700;
+        color: #000;
+        padding: 10px 20px;
         border-radius: 5px;
-        font-size: 16px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        display: block; /* Блок по умолчанию, но с opacity 0 для скрытия */
+        opacity: 0;
+        transition: opacity 0.5s, top 0.5s; /* Плавное изменение прозрачности и позиции */
     }
+
+        .search-message.show {
+            opacity: 1;
+            top: 20px; /* Окончательное положение ниже, чтобы сообщение было видно */
+        }
 
     .search-container {
         display: flex;
@@ -90,11 +101,19 @@
         .search-container .age-checkbox-container {
             display: flex;
             align-items: center;
-            margin-top: 10px;
+            justify-content: center;
+            width: 100%; /* Обеспечиваем, что контейнер занимает всю ширину */
+            margin: 10px 0; /* Вертикальные отступы для четкости */
         }
 
             .search-container .age-checkbox-container label {
-                margin-right: 10px;
+                margin-right: 10px; /* Отступ справа от текста до чекбокса */
+                white-space: nowrap; /* Предотвращает перенос текста на новую строку */
+            }
+
+            .search-container .age-checkbox-container input[type="checkbox"] {
+                width: 20px; /* Уменьшаем размер чекбокса */
+                height: 20px; /* Уменьшаем размер чекбокса */
             }
 
         .search-container select {
@@ -142,6 +161,18 @@
                 cursor: pointer;
             }
 
+        .search-container .double-slider {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px; /* Уменьшаем отступ между ползунками */
+        }
+
+        .search-container .slider {
+            width: 90%; /* Пропорциональное уменьшение ширины ползунка */
+            margin: 5px 0; /* Уменьшаем вертикальный отступ */
+        }
+
 </style>
 
 
@@ -153,10 +184,12 @@
     {
         <button class="btn btn-primary" @onclick="QuickSearchAsync">Quick Search</button>
     }
+
     <button class="btn btn-primary" @onclick="ToggleAdvancedSearch">Advanced Search</button>
+
     @if (!string.IsNullOrEmpty(searchMessage))
     {
-        <div class="alert alert-warning" role="alert">
+        <div class="search-message show">
             @searchMessage
         </div>
     }
@@ -193,22 +226,25 @@
 
             @if (!anyAgeSelected)
             {
-                <div class="age-range-container">
-                    <label for="ageFrom">Age From: @ageFrom</label>
-                    <input type="range" id="ageFrom" min="18" max="100" value="@ageFrom" @oninput="UpdateAgeFrom" class="slider">
-                    <br />
-
-                    <label for="ageTo">Age To: @ageTo</label>
-                    <input type="range" id="ageTo" min="18" max="100" value="@ageTo" @oninput="UpdateAgeTo" class="slider">
-                    <br />
+                <div class="double-slider">
+                    <div class="double-slider">
+                        <div>
+                            <label for="ageFrom">Age From: @ageFrom</label>
+                            <input type="range" id="ageFrom" min="18" max="100" value="@ageFrom" @oninput="UpdateAgeFrom" class="slider age-from">
+                        </div>
+                        <div>
+                            <label for="ageTo">Age To: @ageTo</label>
+                            <input type="range" id="ageTo" min="18" max="100" value="@ageTo" @oninput="UpdateAgeTo" class="slider age-to">
+                        </div>
+                    </div>
                 </div>
+
             }
 
             <div class="age-checkbox-container">
                 <label>Любой возраст</label>
                 <input type="checkbox" @bind="anyAgeSelected" />
             </div>
-            <br />
 
             <label for="gender">Gender:</label>
             <select @bind="selectedGender" id="gender">
@@ -217,7 +253,6 @@
                 <option value="Female">Female</option>
                 <option value="Other">Other</option>
             </select>
-            <br />
 
             <button class="btn btn-primary" @onclick="AdvancedSearchAsync">Search</button>
         </div>
@@ -270,11 +305,19 @@
     private void UpdateAgeFrom(ChangeEventArgs e)
     {
         ageFrom = Convert.ToInt32(e.Value);
+        if (ageFrom > ageTo)
+        {
+            ageTo = ageFrom;
+        }
     }
 
     private void UpdateAgeTo(ChangeEventArgs e)
     {
         ageTo = Convert.ToInt32(e.Value);
+        if (ageTo < ageFrom)
+        {
+            ageFrom = ageTo;
+        }
     }
 
     private async Task QuickSearchAsync()
@@ -349,6 +392,46 @@
             NavigationManager.NavigateTo($"search-results/{string.Join(",", userIds)}");
         }
     }
-
-
 }
+
+@* Для ползуников возраста *@
+<script>
+    var ageFromSlider = document.querySelector('.age-from');
+    var ageToSlider = document.querySelector('.age-to');
+
+    function updateRange() {
+        if (parseInt(ageFromSlider.value) > parseInt(ageToSlider.value)) {
+            ageToSlider.value = ageFromSlider.value;
+        }
+        if (parseInt(ageToSlider.value) < parseInt(ageFromSlider.value)) {
+            ageFromSlider.value = ageToSlider.value;
+        }
+    }
+
+    ageFromSlider.oninput = function () {
+        updateRange();
+    }
+    ageToSlider.oninput = function () {
+        updateRange();
+    }
+</script>
+
+@* Для всплывающего сообщения *@
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const msg = document.querySelector('.search-message');
+        if (msg) {
+            // Показываем сообщение сразу после загрузки
+            msg.classList.add('show');
+
+            // Убираем сообщение через 5 секунд
+            setTimeout(() => {
+                msg.classList.remove('show'); // Сначала убираем класс для анимации
+                msg.style.opacity = '0'; // Начинаем процесс исчезновения
+                setTimeout(() => {
+                    msg.style.display = 'none'; // Скрываем после завершения анимации
+                }, 500); // Задержка должна соответствовать времени анимации
+            }, 5000); // Показываем сообщение в течение 5 секунд
+        }
+    });
+</script>
