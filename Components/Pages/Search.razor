@@ -353,7 +353,7 @@
 
     private async Task AdvancedSearchAsync()
     {
-        var now = DateOnly.FromDateTime(DateTime.Now);
+        var today = DateOnly.FromDateTime(DateTime.Today);
         var query = DbContext.Users
             .Include(u => u.UserLanguages)
             .Where(u => u.Id != user.Id)
@@ -362,12 +362,11 @@
                                                   ul.LanguageLvl >= partnerLanguageLevelFrom &&
                                                   ul.LanguageLvl <= partnerLanguageLevelTo));
 
-        // Проверка на выбор опции "Любой возраст"
         if (!anyAgeSelected)
         {
             query = query.Where(u => u.DateOfBirth.HasValue &&
-                                     (now.Year - u.DateOfBirth.Value.Year >= ageFrom.GetValueOrDefault(0) &&
-                                      now.Year - u.DateOfBirth.Value.Year <= ageTo.GetValueOrDefault(150)));
+                                     u.DateOfBirth.Value.AddYears(ageFrom.GetValueOrDefault(0)) <= today &&
+                                     u.DateOfBirth.Value.AddYears(ageTo.GetValueOrDefault(150)) >= today);
         }
 
         // Фильтрация по полу с учетом пользователей с неуказанным полом
