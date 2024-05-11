@@ -16,6 +16,13 @@
 @inject IHttpContextAccessor HttpContextAccessor
 
 <style>
+    .page {
+        background: url('searchbg.png') no-repeat center center fixed !important;
+        background-size: cover !important;
+        height: 100vh !important;
+        width: 100vw !important;
+    }
+
     .alert-warning {
         margin-top: 10px;
         color: #856404;
@@ -25,86 +32,197 @@
         border-radius: 5px;
         font-size: 16px;
     }
+
+    .search-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 60vh;
+        max-width: 500px;
+        margin: 20px auto 0;
+        padding: 20px;
+        border-radius: 10px;
+        background-color: #184f78;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    }
+
+        .search-container label {
+            color: #ffffff;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .search-container input, .search-container select {
+            background: linear-gradient(145deg, #1d6a96, #163d5e);
+            color: #ffffff;
+            border: 2px solid #1a8ec2;
+            padding: 8px 12px;
+            border-radius: 8px;
+            outline: none;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+            .search-container input:focus, .search-container select:focus {
+                transform: scale(1.05);
+                box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+            }
+
+        .search-container button {
+            background-color: #1a8ec2;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 10px auto;
+            display: block;
+        }
+
+            .search-container button:hover {
+                background-color: #1378a4;
+            }
+
+        .search-container .age-checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+            .search-container .age-checkbox-container label {
+                margin-right: 10px;
+            }
+
+        .search-container select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-color: #163d5e;
+        }
+
+        .search-container option {
+            background-color: #184f78;
+            color: white;
+        }
+
+        .search-container .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #163d5e;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+
+            .search-container .slider:hover {
+                opacity: 1; /* Полная непрозрачность при наведении */
+            }
+
+            .search-container .slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: #1a8ec2;
+                cursor: pointer;
+            }
+
+            .search-container .slider::-moz-range-thumb {
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: #1a8ec2;
+                cursor: pointer;
+            }
+
 </style>
+
+
 
 @attribute [Authorize]
 
-<h3>Search</h3>
+<div class="search-container">
+    @if (quickSearchVisible)
+    {
+        <button class="btn btn-primary" @onclick="QuickSearchAsync">Quick Search</button>
+    }
+    <button class="btn btn-primary" @onclick="ToggleAdvancedSearch">Advanced Search</button>
+    @if (!string.IsNullOrEmpty(searchMessage))
+    {
+        <div class="alert alert-warning" role="alert">
+            @searchMessage
+        </div>
+    }
 
-<button class="btn btn-primary" @onclick="QuickSearchAsync">Quick Search</button>
-<button class="btn btn-primary" @onclick="ToggleAdvancedSearch">Advanced Search</button>
-@if (!string.IsNullOrEmpty(searchMessage))
-{
-    <div class="alert alert-warning" role="alert">
-        @searchMessage
-    </div>
-}
+    @if (showAdvancedSearch)
+    {
+        <div>
+            <label for="languageToLearn">Language to Learn:</label>
+            <select @bind="selectedLanguageId" id="languageToLearn">
+                @foreach (var language in userLanguages.Where(ul => ul.LanguageType == "Wants to Learn"))
+                {
+                    <option value="@language.LanguageId">@language.Language.LanguageName</option>
+                }
+            </select>
+            <br />
 
-@if (showAdvancedSearch)
-{
-    <div>
-        <label for="languageToLearn">Language to Learn:</label>
-        <select @bind="selectedLanguageId" id="languageToLearn">
-            @foreach (var language in userLanguages.Where(ul => ul.LanguageType == "Wants to Learn"))
+            <label for="partnerLanguageLevelFrom">Partner's Language Level From:</label>
+            <select id="partnerLanguageLevelFrom" @bind="partnerLanguageLevelFrom">
+                @foreach (LanguageLvl level in Enum.GetValues(typeof(LanguageLvl)))
+                {
+                    <option value="@level" selected="@(level == partnerLanguageLevelFrom)">@level.GetDescription()</option>
+                }
+            </select>
+            <br />
+
+            <label for="partnerLanguageLevelTo">Partner's Language Level To:</label>
+            <select id="partnerLanguageLevelTo" @bind="partnerLanguageLevelTo">
+                @foreach (LanguageLvl level in Enum.GetValues(typeof(LanguageLvl)))
+                {
+                    <option value="@level" selected="@(level == partnerLanguageLevelTo)">@level.GetDescription()</option>
+                }
+            </select>
+            <br />
+
+            @if (!anyAgeSelected)
             {
-                <option value="@language.LanguageId">@language.Language.LanguageName</option>
+                <div class="age-range-container">
+                    <label for="ageFrom">Age From: @ageFrom</label>
+                    <input type="range" id="ageFrom" min="18" max="100" value="@ageFrom" @oninput="UpdateAgeFrom" class="slider">
+                    <br />
+
+                    <label for="ageTo">Age To: @ageTo</label>
+                    <input type="range" id="ageTo" min="18" max="100" value="@ageTo" @oninput="UpdateAgeTo" class="slider">
+                    <br />
+                </div>
             }
-        </select>
-        <br />
 
-        <label for="partnerLanguageLevelFrom">Partner's Language Level From:</label>
-        <select id="partnerLanguageLevelFrom" @bind="partnerLanguageLevelFrom">
-            @foreach (LanguageLvl level in Enum.GetValues(typeof(LanguageLvl)))
-            {
-                <option value="@level" selected="@(level == partnerLanguageLevelFrom)">@level.GetDescription()</option>
-            }
-        </select>
-        <br />
+            <div class="age-checkbox-container">
+                <label>Любой возраст</label>
+                <input type="checkbox" @bind="anyAgeSelected" />
+            </div>
+            <br />
 
-        <label for="partnerLanguageLevelTo">Partner's Language Level To:</label>
-        <select id="partnerLanguageLevelTo" @bind="partnerLanguageLevelTo">
-            @foreach (LanguageLvl level in Enum.GetValues(typeof(LanguageLvl)))
-            {
-                <option value="@level" selected="@(level == partnerLanguageLevelTo)">@level.GetDescription()</option>
-            }
-        </select>
-        <br />
+            <label for="gender">Gender:</label>
+            <select @bind="selectedGender" id="gender">
+                <option value="">Any</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+            </select>
+            <br />
 
-        <label for="ageFrom">Age From:</label>
-        <select id="ageFrom" @bind="ageFrom" disabled="@anyAgeSelected">
-            @for (int i = 18; i <= 100; i++)
-            {
-                <option value="@i">@i</option>
-            }
-        </select>
-        <br />
-
-        <label for="ageTo">Age To:</label>
-        <select id="ageTo" @bind="ageTo" disabled="@anyAgeSelected">
-            @for (int i = 18; i <= 100; i++)
-            {
-                <option value="@i">@i</option>
-            }
-        </select>
-        <br />
-
-        <label>
-            <input type="checkbox" @bind="anyAgeSelected" /> Любой возраст
-        </label>
-        <br />
-
-        <label for="gender">Gender:</label>
-        <select @bind="selectedGender" id="gender">
-            <option value="">Any</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-        </select>
-        <br />
-
-        <button class="btn btn-primary" @onclick="AdvancedSearchAsync">Search</button>
-    </div>
-}
+            <button class="btn btn-primary" @onclick="AdvancedSearchAsync">Search</button>
+        </div>
+    }
+</div>
 
 @code {
     private ApplicationUser user = default!;
@@ -116,11 +234,12 @@
 
     private string searchMessage = "";
     private bool showAdvancedSearch = false;
+    private bool quickSearchVisible = true;
     private int selectedLanguageId;
     private LanguageLvl partnerLanguageLevelFrom = LanguageLvl.A1;
     private LanguageLvl partnerLanguageLevelTo = LanguageLvl.C2;
     private int? ageFrom = 18;
-    private int? ageTo = 80;
+    private int? ageTo = 100;
     private bool anyAgeSelected = true; // По умолчанию "Любой возраст" выбран
     private string selectedGender;
 
@@ -144,6 +263,18 @@
     private void ToggleAdvancedSearch()
     {
         showAdvancedSearch = !showAdvancedSearch;
+        quickSearchVisible = !quickSearchVisible;
+        searchMessage = null;
+    }
+
+    private void UpdateAgeFrom(ChangeEventArgs e)
+    {
+        ageFrom = Convert.ToInt32(e.Value);
+    }
+
+    private void UpdateAgeTo(ChangeEventArgs e)
+    {
+        ageTo = Convert.ToInt32(e.Value);
     }
 
     private async Task QuickSearchAsync()
@@ -192,8 +323,8 @@
         if (!anyAgeSelected)
         {
             query = query.Where(u => u.DateOfBirth.HasValue &&
-                                     (now.Year - u.DateOfBirth.Value.Year >= (ageFrom ?? 0) &&
-                                      now.Year - u.DateOfBirth.Value.Year <= (ageTo ?? 150)));
+                                     (now.Year - u.DateOfBirth.Value.Year >= ageFrom.GetValueOrDefault(0) &&
+                                      now.Year - u.DateOfBirth.Value.Year <= ageTo.GetValueOrDefault(150)));
         }
 
         // Фильтрация по полу с учетом пользователей с неуказанным полом
@@ -218,5 +349,6 @@
             NavigationManager.NavigateTo($"search-results/{string.Join(",", userIds)}");
         }
     }
+
 
 }
