@@ -4,6 +4,7 @@ namespace LangPrac.Data
 {
     public class ApplicationUser : IdentityUser
     {
+        public string? Nickname { get; set; }
         public ICollection<UserLanguage>? UserLanguages { get; set; }
         public string? Country { get; set; }
         public string? Gender { get; set; }

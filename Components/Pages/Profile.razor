@@ -115,8 +115,9 @@
                     <DataAnnotationsValidator />
                     <ValidationSummary class="text-danger" role="alert" />
                     <div class="form-floating mb-3">
-                        <input type="text" value="@username" class="form-control" placeholder="Please choose your username." disabled />
-                        <label for="username" class="form-label">Username</label>
+                        <InputText @bind-Value="ProfileInput.Nickname" class="form-control" placeholder="Please enter your nickname." />
+                        <label for="nickname" class="form-label">Nickname</label>
+                        <ValidationMessage For="() => ProfileInput.Nickname" class="text-danger" />
                     </div>
                     <div class="form-floating mb-3">
                         <InputText @bind-Value="ProfileInput.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
@@ -138,7 +139,6 @@
                         </InputSelect>
                         <label for="country" class="form-label">Country</label>
                     </div>
-
                     <div class="form-floating mb-3">
                         <InputSelect @bind-Value="ProfileInput.Gender" class="form-control">
                             <option value="">Select your gender</option>
@@ -327,6 +327,7 @@
 @code {
     private ApplicationUser user = default!;
     private string? username;
+    private string? nickname;
     private string? phoneNumber;
     private DateOnly? dateOfBirth;
     private string? profileMessage;
@@ -352,6 +353,7 @@
         user = await UserAccessor.GetRequiredUserAsync(HttpContext);
         username = await UserManager.GetUserNameAsync(user);
         phoneNumber = await UserManager.GetPhoneNumberAsync(user);
+        nickname = user.Nickname;
         dateOfBirth = user.DateOfBirth;
         email = await UserManager.GetEmailAsync(user);
         isEmailConfirmed = await UserManager.IsEmailConfirmedAsync(user);
@@ -359,17 +361,23 @@
         await LoadUserLanguagesAsync();
         hasPassword = await UserManager.HasPasswordAsync(user);
 
+        ProfileInput.Nickname ??= nickname;
         ProfileInput.PhoneNumber ??= phoneNumber;
         ProfileInput.DateOfBirth ??= dateOfBirth;
-        EmailInput.NewEmail ??= email;
         ProfileInput.Country ??= user.Country;
         ProfileInput.Gender ??= user.Gender;
+        EmailInput.NewEmail ??= email;
     }
 
     private async Task OnValidSubmitProfileAsync()
     {
         bool needsReSignIn = false;
 
+        if (user.Nickname != ProfileInput.Nickname)
+        {
+            user.Nickname = ProfileInput.Nickname;
+            needsReSignIn = true;
+        }
         if (user.PhoneNumber != ProfileInput.PhoneNumber)
         {
             user.PhoneNumber = ProfileInput.PhoneNumber;
@@ -594,6 +602,9 @@
     // Формы
     private sealed class ProfileInputModel
     {
+        [Display(Name = "Nickname")]
+        public string Nickname { get; set; }
+
         [Phone]
         [Display(Name = "Phone number")]
         public string? PhoneNumber { get; set; }

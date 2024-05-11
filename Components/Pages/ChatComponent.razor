@@ -164,7 +164,7 @@ button {
         @foreach (var message in Messages)
         {
             <div class="@($"message {(message.SenderId == CurrentUserId ? "user-message" : "partner-message")}")">
-                <strong>@message.Sender.UserName:</strong> @message.Content
+                <strong>@message.Sender.Nickname:</strong> @message.Content
                 <span class="timestamp">@message.Timestamp.ToLocalTime().ToString("HH:mm")</span>
             </div>
         }

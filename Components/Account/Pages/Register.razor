@@ -23,8 +23,6 @@
         width: 100vw !important; /* Устанавливаем ширину вьюпорта на 100% */
     }
 
-
-
     body {
         overflow-y: hidden;
     }
@@ -148,6 +146,7 @@
             <ValidationSummary class="text-danger" role="alert" />
             @* <input type="text" placeholder="name" autocomplete="off" class="name" required> *@
             <InputText @bind-Value="Input.Email" type="email" class="email" autocomplete="username" aria-required="true" placeholder="Email" />
+            <InputText @bind-Value="Input.Nickname" class="name" autocomplete="off" aria-required="true" placeholder="Nickname" />
             <InputText type="password" @bind-Value="Input.Password" class="password" autocomplete="new-password" aria-required="true" placeholder="Password" />
             <InputText type="password" @bind-Value="Input.ConfirmPassword" class="password" autocomplete="new-password" aria-required="true" placeholder="Confirm password" />
             <button type="submit" class="lsubmit-btn">Register</button>
@@ -174,6 +173,9 @@
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         var emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+        user.Nickname = Input.Nickname;
+
         var result = await UserManager.CreateAsync(user, Input.Password);
 
         if (!result.Succeeded)
@@ -216,6 +218,10 @@
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; } = "";
+
+        [Required]
+        [Display(Name = "Nickname")]
+        public string Nickname { get; set; } = "";
 
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
