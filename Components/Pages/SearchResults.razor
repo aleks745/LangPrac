@@ -5,38 +5,68 @@
 @using Microsoft.EntityFrameworkCore
 
 @inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
 @inject ApplicationDbContext DbContext
 @inject IHttpContextAccessor HttpContextAccessor
 
 <style>
-    .avatar-image {
-        width: 80px; /* размер аватара */
-        height: 80px;
-        border-radius: 50%;
-        object-fit: cover;
-        margin-right: 15px; /* отступ справа */
+    body {
+        overflow-y: hidden; /* Запрет прокрутки и скрытие скроллбара */
     }
 
-    .list-group-item {
-        /* background: #a3adbf !important; */
+    .page {
+        background: url('searchbg.png') no-repeat center center fixed !important;
+        background-size: cover !important;
+        height: 100vh !important;
+        width: 100vw !important;
+    }
+
+    .results-container {
         display: flex;
+        flex-direction: column;
+        justify-content: center;
         align-items: center;
-        gap: 20px; /* Добавляет пространство между элементами */
-        padding: 10px;
-        border-bottom: 1px solid #ccc;
+        min-height: 60vh;
+        /* max-height: 276.8px; */
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 40px;
+        border-radius: 10px;
+        background-color: #184f78;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        color: #ffffff;
+        position: relative; /* Для абсолютного позиционирования кнопки возвращения */
     }
 
-        /* Стиль для текста внутри блоков */
-        .list-group-item div {
-            color: #333; /* темно-серый цвет текста */
-            font-size: 14px; /* размер шрифта */
+    .card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 80%;
+        background-color: #1a8ec2;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        margin-bottom: 20px;
+    }
+
+        .card img {
+            width: 100px; /* Уменьшенный размер изображения */
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 10px; /* Отступ снизу от изображения */
         }
 
-    .avatar-placeholder, .avatar-image {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background-color: #eee; /* Фон для placeholder */
+        .card div {
+            flex-grow: 1;
+        }
+
+        .card .info {
+            text-align: center; /* Центрирование текста */
+            font-size: 14px; /* Размер шрифта для текста */
+        }
+
+    .avatar-placeholder {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -44,59 +74,156 @@
         color: darkgrey;
     }
 
+    .btn-invite {
+        padding: 8px 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+        .btn-invite:hover {
+            background-color: #45a049;
+        }
+
+    .btn-find-more {
+        padding: 8px 16px;
+        background-color: #ffcc00;
+        color: #184f78;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-top: 20px;
+    }
+
+        .btn-find-more:hover {
+            background-color: #e6b800;
+        }
+
+    .no-more-partners {
+        color: #ffd700;
+        text-align: center;
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .back-to-search {
+        position: absolute;
+        top: 10px;
+        right: 10px; /* Или `left: 10px;` если лучше в левом углу */
+        padding: 5px 10px;
+        background-color: #1a8ec2;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        border: none;
+    }
+
+    h3 {
+        color: #ffffff; /* Белый цвет для лучшей видимости на темном фоне */
+        text-shadow: 0 0 10px rgba(0, 0, 0, 0.7); /* Тень для текста для лучшего отделения от фона */
+        text-align: center;
+        margin-bottom: 20px; /* Отступ снизу от заголовка */
+    }
+
+    .invitation-sent {
+        display: block;
+        background-color: #4CAF50; /* Зеленый цвет для подтверждения отправки */
+        color: white;
+        text-align: center;
+        padding: 8px 16px;
+        border-radius: 5px;
+        font-size: 14px;
+        margin-top: 10px; /* Отступ сверху, если нужен */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .loading-animation {
+    border: 4px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 4px solid #3498db;
+    width: 30px;
+    height: 30px;
+    -webkit-animation: spin 2s linear infinite; /* Safari */
+    animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@@-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
+
+@@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 </style>
 
 <h3>Search Results</h3>
 
-@if (Users != null)
-{
-    @if (Users.Count > 0)
+<div class="results-container">
+    <button class="back-to-search" @onclick="GoBack">Назад</button>
+    @if (!string.IsNullOrEmpty(searchMessage) && searchMessage == "No more partners found.")
     {
-        <ul class="list-group">
-            @foreach (var user in Users)
-            {
-                var userLanguages = user.UserLanguages; // предполагается, что UserLanguages уже загружены
-                var knownLanguage = userLanguages.FirstOrDefault(ul => ul.LanguageType == "Knows");
-                var wantsToLearnLanguage = userLanguages.FirstOrDefault(ul => ul.LanguageType == "Wants to Learn");
-                <li class="list-group-item">
-                    <div>
-                        @if (user.AvatarImage != null)
-                        {
-                            <img src="@($"data:image/jpeg;base64,{Convert.ToBase64String(user.AvatarImage)}")" alt="Avatar" class="avatar-image" />
-                        }
-                        else
-                        {
-                            <div class="avatar-placeholder">No Avatar</div>
-                        }
-                    </div>
-                    <div>
-                        @user.Nickname <br />
-                        Country: @(!string.IsNullOrEmpty(user.Country) ? user.Country : "Unknown") <br />
-                        Gender: @(!string.IsNullOrEmpty(user.Gender) ? user.Gender : "Unknown") <br />
-                        @if (knownLanguage != null)
-                        {
-                            <span>@knownLanguage.Language.LanguageName (@knownLanguage.LanguageLvl.GetEnumMemberValue())</span> <br />
-                        }
-                        @if (wantsToLearnLanguage != null)
-                        {
-                            <span>wants to learn @wantsToLearnLanguage.Language.LanguageName (@wantsToLearnLanguage.LanguageLvl.GetEnumMemberValue())</span> <br />
-                        }
-                        <span>Age: @(CalculateAge(user.DateOfBirth)?.ToString() ?? "Unknown")</span> <br />
-                        <button class="btn btn-primary" @onclick="() => SendInvite(user)" disabled="@(invitationSent.ContainsKey(user.Id) && invitationSent[user.Id])">Invite</button>
-                        @if (invitationSent.ContainsKey(user.Id) && invitationSent[user.Id])
-                        {
-                            <span>Invitation sent!</span>
-                        }
-                    </div>
-                </li>
-            }
-        </ul>
+        <div class="no-more-partners">@searchMessage</div>
     }
-    else
+    else if (isLoading)
     {
-        <p>No matching users found.</p>
+        <div class="loading-animation"></div>
     }
-}
+    else if (CurrentUser != null)
+    {
+        <div class="card">
+            <div>
+                @if (CurrentUser.AvatarImage != null)
+                {
+                    <img src="@($"data:image/jpeg;base64,{Convert.ToBase64String(CurrentUser.AvatarImage)}")" alt="Avatar" />
+                }
+                else
+                {
+                    <div class="avatar-placeholder">No Avatar</div>
+                }
+            </div>
+            <div class="info">
+                <strong>@CurrentUser.Nickname</strong> <br />
+                Country: @(!string.IsNullOrEmpty(CurrentUser.Country) ? CurrentUser.Country : "Unknown") <br />
+                Gender: @(!string.IsNullOrEmpty(CurrentUser.Gender) ? CurrentUser.Gender : "Unknown") <br />
+                <span>Age: @(CalculateAge(CurrentUser.DateOfBirth)?.ToString() ?? "Unknown")</span> <br />
+                @if (CurrentUser.UserLanguages != null)
+                {
+                    var knownLanguage = CurrentUser.UserLanguages.FirstOrDefault(ul => ul.LanguageType == "Knows");
+                    var wantsToLearnLanguage = CurrentUser.UserLanguages.FirstOrDefault(ul => ul.LanguageType == "Wants to Learn");
+                    if (knownLanguage != null)
+                    {
+                        <span>@knownLanguage.Language.LanguageName (@knownLanguage.LanguageLvl.GetEnumMemberValue())</span> <br />
+                    }
+                    if (wantsToLearnLanguage != null)
+                    {
+                        <span>wants to learn @wantsToLearnLanguage.Language.LanguageName (@wantsToLearnLanguage.LanguageLvl.GetEnumMemberValue())</span> <br />
+                    }
+                }
+                @if (invitationSent.ContainsKey(CurrentUser.Id) && invitationSent[CurrentUser.Id])
+                {
+                    <span class="invitation-sent">Invitation sent!</span>
+                }
+                else
+                {
+                    <button class="btn-invite" @onclick="() => SendInvite(CurrentUser)">Invite</button>
+                }
+            </div>
+        </div>
+        @if (searchMessage != "No more partners found.")
+        {
+            <button class="btn-find-more" @onclick="FindMoreAsync">Find More</button>
+        }
+    }
+</div>
 
 
 @code {
@@ -109,22 +236,39 @@
     private List<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
     private Dictionary<string, bool> invitationSent = new Dictionary<string, bool>();
 
+    private ApplicationUser CurrentUser;
+    private int currentIndex = 0;
+    private string searchMessage = string.Empty;
+    private bool isLoading = false;
+
     protected override async Task OnInitializedAsync()
     {
         if (HttpContext == null)
         {
             HttpContext = HttpContextAccessor.HttpContext;
         }
-        var userIdList = UserIds.Split(',').ToList();
 
-        // Загрузка связанных данных о языках пользователя
+        var userIdList = UserIds.Split(',').ToList();
         Users = await DbContext.Users
-            .Where(u => userIdList.Contains(u.Id))
-            .Include(u => u.UserLanguages) // Убедитесь, что UserLanguage связан с User через навигационное свойство
+            .Where(u => userIdList.Contains(u.Id) && u.Id != UserManager.GetUserId(HttpContext.User))
+            .Include(u => u.UserLanguages)
             .ToListAsync();
+
+        if (Users.Any())
+        {
+            CurrentUser = Users.First();
+        }
+        else
+        {
+            searchMessage = "No matching users found.";
+        }
     }
 
-    // Вспомогательный метод для расчета возраста пользователя
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/search");
+    }
+
     private int? CalculateAge(DateOnly? dateOfBirth)
     {
         if (!dateOfBirth.HasValue)
@@ -142,28 +286,54 @@
         return age;
     }
 
+    private async Task FindMoreAsync()
+    {
+        isLoading = true;
+        UpdateState(); // Вызов для обновления UI
+        currentIndex++;
+        if (currentIndex >= Users.Count)
+        {
+            searchMessage = "No more partners found.";
+            CurrentUser = null;
+            isLoading = false;
+            UpdateState(); // Вызов для обновления UI
+            return;
+        }
+        await Task.Delay(1500); // Имитация загрузки
+        CurrentUser = Users[currentIndex];
+        isLoading = false;
+        UpdateState(); // Вызов для обновления UI
+    }
+
+    private void UpdateState()
+    {
+        StateHasChanged(); // Обновляет состояние компонента и перерисовывает UI
+    }
 
     private async Task SendInvite(ApplicationUser user)
     {
-        var notificationForReceiver = new Notification
-            {
-                SenderId = UserManager.GetUserId(HttpContext.User),
-                ReceiverId = user.Id,
-                Message = $"You have been invited by {UserManager.GetUserAsync(HttpContext.User).Result.UserName} to join a chat."
-            };
+        if (!invitationSent.ContainsKey(user.Id) || !invitationSent[user.Id])
+        {
+            var notificationForReceiver = new Notification
+                {
+                    SenderId = UserManager.GetUserId(HttpContext.User),
+                    ReceiverId = user.Id,
+                    Message = $"You have been invited by {UserManager.GetUserName(HttpContext.User)} to join a chat."
+                };
 
-        var notificationForSender = new Notification
-            {
-                SenderId = UserManager.GetUserId(HttpContext.User),
-                ReceiverId = UserManager.GetUserId(HttpContext.User),
-                Message = $"Your invitation to {user.UserName} has been sent.",
-                Status = "Sent"
-            };
+            var notificationForSender = new Notification
+                {
+                    SenderId = UserManager.GetUserId(HttpContext.User),
+                    ReceiverId = UserManager.GetUserId(HttpContext.User),
+                    Message = $"Your invitation to {user.UserName} has been sent.",
+                    Status = "Sent"
+                };
 
-        DbContext.Notifications.AddRange(notificationForReceiver, notificationForSender);
-        await DbContext.SaveChangesAsync();
+            DbContext.Notifications.AddRange(notificationForReceiver, notificationForSender);
+            await DbContext.SaveChangesAsync();
 
-        // Устанавливаем статус отправки приглашения в true для данного пользователя
-        invitationSent[user.Id] = true;
+            invitationSent[user.Id] = true;  // Mark the invitation as sent.
+        }
     }
+
 }
