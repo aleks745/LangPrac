@@ -10,15 +10,12 @@
 @inject IHttpContextAccessor HttpContextAccessor
 
 <style>
-    body {
-        overflow-y: hidden; /* Запрет прокрутки и скрытие скроллбара */
-    }
-
     .page {
         background: url('searchbg.png') no-repeat center center fixed !important;
         background-size: cover !important;
         height: 100vh !important;
         width: 100vw !important;
+        font-size: 2.1vh;
     }
 
     .results-container {
@@ -27,34 +24,32 @@
         justify-content: center;
         align-items: center;
         min-height: 60vh;
-        /* max-height: 276.8px; */
-        max-width: 500px;
-        margin: 50px auto;
-        padding: 40px;
-        border-radius: 10px;
+        max-width: 25vw;
+        margin: 0vh auto;
+        padding: 6.7vh;
+        border-radius: 1.3vh;
         background-color: #184f78;
-        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 0 1.3vh rgba(0, 0, 0, 0.1);
         color: #ffffff;
-        position: relative; /* Для абсолютного позиционирования кнопки возвращения */
+        position: relative;
     }
 
     .card {
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: 80%;
-        background-color: #1a8ec2;
-        padding: 20px;
-        border-radius: 5px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        margin-bottom: 20px;
+        width: 90%;
+        background-color: #7E8D85;
+        padding: 2.7vh;
+        border-radius: 0.7vh;
+        box-shadow: 0 0.3vh 0.5vh rgba(0, 0, 0, 0.2);
     }
 
         .card img {
-            width: 100px; /* Уменьшенный размер изображения */
-            height: 100px;
+            width: 6vw;
+            height: 6vw;
             border-radius: 50%;
-            margin-bottom: 10px; /* Отступ снизу от изображения */
+            margin-bottom: 1.3vh;
         }
 
         .card div {
@@ -62,8 +57,8 @@
         }
 
         .card .info {
-            text-align: center; /* Центрирование текста */
-            font-size: 14px; /* Размер шрифта для текста */
+            text-align: center;
+            font-size: 1.9vh;
         }
 
     .avatar-placeholder {
@@ -75,14 +70,14 @@
     }
 
     .btn-invite {
-        padding: 8px 16px;
+        padding: 1.1vh 2.1vw;
         background-color: #4CAF50;
         color: white;
         border: none;
-        border-radius: 5px;
+        border-radius: 0.7vh;
         font-weight: bold;
         cursor: pointer;
-        margin-top: 10px;
+        margin-top: 1.3vh;
     }
 
         .btn-invite:hover {
@@ -90,67 +85,77 @@
         }
 
     .btn-find-more {
-        padding: 8px 16px;
-        background-color: #ffcc00;
-        color: #184f78;
+        padding: 1.1vh 2.1vw;
+        background-color: #FC7753;
+        color: #FFFFFF;
         border: none;
-        border-radius: 5px;
+        border-radius: 0.7vh;
         cursor: pointer;
         font-weight: bold;
-        margin-top: 20px;
+        margin-top: 2.6vh;
     }
 
         .btn-find-more:hover {
-            background-color: #e6b800;
+            background-color: #E36847;
         }
 
     .no-more-partners {
         color: #ffd700;
         text-align: center;
-        padding: 10px;
-        font-size: 16px;
+        padding: 1.3vh;
+        font-size: 2.1vh;
     }
 
     .back-to-search {
         position: absolute;
-        top: 10px;
-        right: 10px; /* Или `left: 10px;` если лучше в левом углу */
-        padding: 5px 10px;
+        top: 1.3vh;
+        right: 1.3vw;
+        padding: 0.7vh 1.3vw;
         background-color: #1a8ec2;
         color: white;
-        border-radius: 5px;
+        border-radius: 0.7vh;
         cursor: pointer;
         border: none;
     }
 
-    h3 {
-        color: #ffffff; /* Белый цвет для лучшей видимости на темном фоне */
-        text-shadow: 0 0 10px rgba(0, 0, 0, 0.7); /* Тень для текста для лучшего отделения от фона */
-        text-align: center;
-        margin-bottom: 20px; /* Отступ снизу от заголовка */
+    .language-info {
+        text-align: left;
+        color: #d0e8ff;
+        margin-top: 1.3vh;
+    }
+
+    .language {
+        background-color: #2c3e50;
+        padding: 0.7vh;
+        border-radius: 0.5vh;
+        margin: 0.3vh 0;
+        color: white;
+        font-weight: bold;
+        font-size: 1.7vh;
     }
 
     .invitation-sent {
         display: block;
-        background-color: #4CAF50; /* Зеленый цвет для подтверждения отправки */
+        background-color: #4CAF50;
         color: white;
         text-align: center;
-        padding: 8px 16px;
-        border-radius: 5px;
-        font-size: 14px;
-        margin-top: 10px; /* Отступ сверху, если нужен */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        padding: 1.1vh 2.1vw;
+        border-radius: 0.7vh;
+        font-size: 1.9vh;
+        margin-top: 1.3vh;
+        box-shadow: 0 0.3vh 0.5vh rgba(0, 0, 0, 0.2);
     }
 
     .loading-animation {
-    border: 4px solid #f3f3f3;
-    border-radius: 50%;
-    border-top: 4px solid #3498db;
-    width: 30px;
-    height: 30px;
-    -webkit-animation: spin 2s linear infinite; /* Safari */
-    animation: spin 2s linear infinite;
-}
+        border: 0.5vh solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 0.5vh solid #3498db;
+        width: 4vw;
+        height: 4vw;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
 
 /* Safari */
 @@-webkit-keyframes spin {
@@ -165,7 +170,6 @@
 
 </style>
 
-<h3>Search Results</h3>
 
 <div class="results-container">
     <button class="back-to-search" @onclick="GoBack">Назад</button>
@@ -195,19 +199,18 @@
                 Country: @(!string.IsNullOrEmpty(CurrentUser.Country) ? CurrentUser.Country : "Unknown") <br />
                 Gender: @(!string.IsNullOrEmpty(CurrentUser.Gender) ? CurrentUser.Gender : "Unknown") <br />
                 <span>Age: @(CalculateAge(CurrentUser.DateOfBirth)?.ToString() ?? "Unknown")</span> <br />
-                @if (CurrentUser.UserLanguages != null)
-                {
-                    var knownLanguage = CurrentUser.UserLanguages.FirstOrDefault(ul => ul.LanguageType == "Knows");
-                    var wantsToLearnLanguage = CurrentUser.UserLanguages.FirstOrDefault(ul => ul.LanguageType == "Wants to Learn");
-                    if (knownLanguage != null)
+                <div class="language-info">
+                    <strong>Languages Known:</strong>
+                    @foreach (var lang in CurrentUser.UserLanguages.Where(ul => ul.LanguageType == "Knows"))
                     {
-                        <span>@knownLanguage.Language.LanguageName (@knownLanguage.LanguageLvl.GetEnumMemberValue())</span> <br />
+                        <div class="language">@lang.Language.LanguageName (@lang.LanguageLvl.GetEnumMemberValue())</div>
                     }
-                    if (wantsToLearnLanguage != null)
+                    <strong>Languages Learning:</strong>
+                    @foreach (var lang in CurrentUser.UserLanguages.Where(ul => ul.LanguageType == "Wants to Learn"))
                     {
-                        <span>wants to learn @wantsToLearnLanguage.Language.LanguageName (@wantsToLearnLanguage.LanguageLvl.GetEnumMemberValue())</span> <br />
+                        <div class="language">@lang.Language.LanguageName (@lang.LanguageLvl.GetEnumMemberValue())</div>
                     }
-                }
+                </div>
                 @if (invitationSent.ContainsKey(CurrentUser.Id) && invitationSent[CurrentUser.Id])
                 {
                     <span class="invitation-sent">Invitation sent!</span>
@@ -249,6 +252,11 @@
         }
 
         var userIdList = UserIds.Split(',').ToList();
+        isLoading = true;
+        UpdateState();
+
+        await Task.Delay(1500); 
+
         Users = await DbContext.Users
             .Where(u => userIdList.Contains(u.Id) && u.Id != UserManager.GetUserId(HttpContext.User))
             .Include(u => u.UserLanguages)
@@ -262,6 +270,9 @@
         {
             searchMessage = "No matching users found.";
         }
+
+        isLoading = false;
+        UpdateState();
     }
 
     private void GoBack()
@@ -289,20 +300,20 @@
     private async Task FindMoreAsync()
     {
         isLoading = true;
-        UpdateState(); // Вызов для обновления UI
+        UpdateState();
         currentIndex++;
         if (currentIndex >= Users.Count)
         {
             searchMessage = "No more partners found.";
             CurrentUser = null;
             isLoading = false;
-            UpdateState(); // Вызов для обновления UI
+            UpdateState();
             return;
         }
-        await Task.Delay(1500); // Имитация загрузки
+        await Task.Delay(1500);
         CurrentUser = Users[currentIndex];
         isLoading = false;
-        UpdateState(); // Вызов для обновления UI
+        UpdateState();
     }
 
     private void UpdateState()

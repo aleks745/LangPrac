@@ -21,27 +21,28 @@
         background-size: cover !important;
         height: 100vh !important;
         width: 100vw !important;
+        font-size: 2.1vh;
     }
 
     .search-message {
         position: fixed;
-        top: -50px; /* Начнем с верхней части экрана */
+        top: -3.5vh;
         left: 50%;
         transform: translateX(-50%);
         z-index: 1000;
         background-color: #ffd700;
         color: #000;
-        padding: 10px 20px;
-        border-radius: 5px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        display: block; /* Блок по умолчанию, но с opacity 0 для скрытия */
+        padding: 1.4vh 2.7vw;
+        border-radius: 0.7vh;
+        box-shadow: 0 0.5vh 0.7vh rgba(0,0,0,0.1);
+        display: block;
         opacity: 0;
-        transition: opacity 0.5s, top 0.5s; /* Плавное изменение прозрачности и позиции */
+        transition: opacity 0.5s, top 0.5s;
     }
 
         .search-message.show {
             opacity: 1;
-            top: 20px; /* Окончательное положение ниже, чтобы сообщение было видно */
+            top: 3vh; /* Окончательное положение ниже, чтобы сообщение было видно */
         }
 
     .search-container {
@@ -50,47 +51,47 @@
         justify-content: center;
         align-items: center;
         min-height: 60vh;
-        max-width: 500px;
-        margin: 50px auto;
-        padding: 20px;
-        border-radius: 10px;
+        max-width: 25vw;
+        margin: 0 auto;
+        padding: 2.7vh;
+        border-radius: 1.3vh;
         background-color: #184f78;
-        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 0 1.3vh rgba(0, 0, 0, 0.1);
     }
 
         .search-container label {
             color: #ffffff;
-            margin-bottom: 4px;
+            margin-bottom: 0.5vh;
             display: block;
         }
 
         .search-container input, .search-container select {
             background: linear-gradient(145deg, #1d6a96, #163d5e);
             color: #ffffff;
-            border: 2px solid #1a8ec2;
-            padding: 8px 12px;
-            border-radius: 8px;
+            border: 0.20vw solid #1a8ec2;
+            padding: 1.0vh 1.4vw;
+            border-radius: 1.1vh;
             outline: none;
             width: 100%;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0.5vh 0.7vh rgba(0, 0, 0, 0.1);
             transition: transform 0.3s, box-shadow 0.3s;
         }
 
             .search-container input:focus, .search-container select:focus {
                 transform: scale(1.05);
-                box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+                box-shadow: 0 0.8vh 1.1vh rgba(0, 0, 0, 0.15);
             }
 
         .search-container button {
             background-color: #1a8ec2;
             color: #ffffff;
             border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            font-size: 16px;
+            padding: 1.1vh 2.1vw;
+            border-radius: 0.7vh;
+            font-size: 2.1vh;
             cursor: pointer;
             transition: background-color 0.3s;
-            margin: 10px auto;
+            margin: 1.3vh auto;
             display: block;
         }
 
@@ -102,18 +103,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%; /* Обеспечиваем, что контейнер занимает всю ширину */
-            margin: 10px 0; /* Вертикальные отступы для четкости */
+            width: 100%;
+            margin: 1.3vh 0;
         }
 
             .search-container .age-checkbox-container label {
-                margin-right: 10px; /* Отступ справа от текста до чекбокса */
-                white-space: nowrap; /* Предотвращает перенос текста на новую строку */
+                margin-right: 1.3vw;
+                white-space: nowrap;
             }
 
             .search-container .age-checkbox-container input[type="checkbox"] {
-                width: 20px; /* Уменьшаем размер чекбокса */
-                height: 20px; /* Уменьшаем размер чекбокса */
+                width: 1vw;
+                height: 1vw;
             }
 
         .search-container select {
@@ -131,8 +132,8 @@
         .search-container .slider {
             -webkit-appearance: none;
             width: 100%;
-            height: 8px;
-            border-radius: 5px;
+            height: 1.1vh;
+            border-radius: 1vh;
             background: #163d5e;
             outline: none;
             opacity: 0.7;
@@ -140,22 +141,22 @@
         }
 
             .search-container .slider:hover {
-                opacity: 1; /* Полная непрозрачность при наведении */
+                opacity: 1;
             }
 
             .search-container .slider::-webkit-slider-thumb {
                 -webkit-appearance: none;
                 appearance: none;
-                width: 18px;
-                height: 18px;
+                width: 1.2vw;
+                height: 1.2vw;
                 border-radius: 50%;
                 background: #1a8ec2;
                 cursor: pointer;
             }
 
             .search-container .slider::-moz-range-thumb {
-                width: 18px;
-                height: 18px;
+                width: 1.2vw;
+                height: 1.2vw;
                 border-radius: 50%;
                 background: #1a8ec2;
                 cursor: pointer;
@@ -165,27 +166,26 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px; /* Уменьшаем отступ между ползунками */
+            gap: 0.7vh;
         }
 
         .search-container .slider {
-            width: 90%; /* Пропорциональное уменьшение ширины ползунка */
-            margin: 5px 0; /* Уменьшаем вертикальный отступ */
+            width: 90%;
+            margin: 0.7vh 0;
         }
 
-    h3 {
-        color: #ffffff; /* Белый цвет для лучшей видимости на темном фоне */
-        text-shadow: 0 0 10px rgba(0, 0, 0, 0.7); /* Тень для текста для лучшего отделения от фона */
-        text-align: center;
-        margin-bottom: 20px; /* Отступ снизу от заголовка */
+    .mlabel {
+        font-size: 3.1vh;
+        color: #ffffff;
+        text-shadow: 0 0 1.3vh rgba(0, 0, 0, 0.7);
+        top: 9vh;
     }
 </style>
-
-<h3>Search</h3>
 
 @attribute [Authorize]
 
 <div class="search-container">
+    <h3 class="mlabel">Search</h3>
     @if (quickSearchVisible)
     {
         <button class="btn btn-primary" @onclick="QuickSearchAsync">Quick Search</button>
@@ -235,11 +235,11 @@
                 <div class="double-slider">
                     <div class="double-slider">
                         <div>
-                            <label for="ageFrom">Age From: @ageFrom</label>
+                            <label for="ageFrom" style="font-size: 2vh;">Age From: @ageFrom</label>
                             <input type="range" id="ageFrom" min="18" max="100" value="@ageFrom" @oninput="UpdateAgeFrom" class="slider age-from">
                         </div>
                         <div>
-                            <label for="ageTo">Age To: @ageTo</label>
+                            <label for="ageTo" style="font-size: 2vh;">Age To: @ageTo</label>
                             <input type="range" id="ageTo" min="18" max="100" value="@ageTo" @oninput="UpdateAgeTo" class="slider age-to">
                         </div>
                     </div>
