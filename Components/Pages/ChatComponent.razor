@@ -13,122 +13,129 @@
 @inject IHttpContextAccessor HttpContextAccessor
 
 <style>
-body {
-    overflow-y: hidden; /* Запрет прокрутки и скрытие скроллбара */
-}
+    body {
+        overflow-y: hidden; /* Запрет прокрутки и скрытие скроллбара */
+    }
+    .page {
+        background: url('searchbg.png') no-repeat center center fixed !important;
+        background-size: cover !important;
+        background-attachment: fixed !important;
+        min-height: 100vh !important;
+        width: 100vw !important;
+        font-size: 2.1vh;
+    }
 
-/* Родительский контейнер для всего чата, занимающий всю высоту экрана за вычетом заголовка и строки ввода */
-.chat-layout {
-    display: flex;
-    flex-direction: column;
-    height: 100vh; /* Используйте высоту всего видимого экрана */
-}
+    .chat-layout {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        background-color: #184f78; 
+    }
 
-.chat-container {
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    height: 540px; /* Регулируйте высоту по вашему усмотрению */
-    padding: 10px;
-}
-        /* Стилизация полосы прокрутки */
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        height: 74vh;
+        padding: 1.11vh;
+        background-color: #163d5e;
+        color: #ffffff;
+    }
         .chat-container::-webkit-scrollbar {
-            width: 10px; /* ширина полосы прокрутки */
+            width: 0.28vw; /* ширина полосы прокрутки */
         }
 
         .chat-container::-webkit-scrollbar-track {
-            background: #f1f1f1; /* цвет дорожки */
-            border-radius: 10px;
+            background: #aaa; /* светло-синий цвет дорожки */
+            border-radius: 1.11vh;
         }
 
         .chat-container::-webkit-scrollbar-thumb {
-            background: #888; /* цвет ползунка */
-            border-radius: 10px;
+            background: #888; /* зеленый цвет ползунка */
+            border-radius: 1.11vh;
         }
 
             .chat-container::-webkit-scrollbar-thumb:hover {
-                background: #555; /* цвет ползунка при наведении */
+                background: #555; /* темно-зеленый цвет ползунка при наведении */
             }
 
-.message {
-    max-width: 70%;
-    padding: 8px 16px;
-    margin-bottom: 10px;
-    border-radius: 20px;
-    color: white;
-    word-wrap: break-word; /* Обеспечивает перенос строк внутри блока */
-}
-
-.user-message {
-    background-color: #0B93F6; /* Синий цвет для сообщений пользователя */
-    margin-left: auto; /* Выравнивание справа */
-    animation: slideInFromRight 0.5s ease-out;
-}
-
-.partner-message {
-    background-color: #E5E5EA;
-    color: black; /* Цвет текста для лучшей читаемости */
-    margin-right: auto; /* Выравнивание слева */
-    animation: slideInFromLeft 0.5s ease-out;
-}
-
-/* Стилизация заголовка чата */
-.chat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 10px; /* Уменьшено с 10px до 5px */
-}
-
-.btn-danger {
-    background-color: red; /* Ярко-красный цвет для кнопки удаления */
-    color: white;
-}
-
-.btn-send {
-    background-image: linear-gradient(to right, #4caf50 0%, #087f23 100%); /* Зеленый градиент для кнопки отправки */
-    color: white;
-}
-
-.timestamp {
-    display: block;
-    font-size: 0.75rem;
-    opacity: 0.75;
-    text-align: right;
-}
-
-.chat-input {
-    display: flex;
-    justify-content: center;
-    padding: 15px;
-    border-radius: 15px;
-    margin: 0 10px; /* Добавьте поля, чтобы оставить немного свободного пространства от краев контейнера чата */
-    gap: 10px; /* Добавляет пространство между элементами формы */
-}
-
-    .chat-input input[type="text"] {
-        width: 80%;
-        padding: 10px 15px;
-        border: 1px solid #ccc;
-        border-radius: 15px;
-        font-size: 1rem;
-        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    .message {
+        max-width: 70%;
+        padding: 0.89vh 1.78vh;
+        margin-bottom: 1.11vh;
+        border-radius: 2.22vh;
+        color: white;
+        word-wrap: break-word;
     }
 
-button {
-    border: none;
-    padding: 10px 20px;
-    border-radius: 15px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
+    .user-message {
+        background-color: #4caf50; /* Зеленый цвет для сообщений пользователя */
+        margin-left: auto; /* Выравнивание справа */
+        animation: slideInFromRight 0.5s forwards;
+    }
 
-.delete-chat-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-}
+    .partner-message {
+        background-color: #1a8ec2; /* Светло-синий фон для сообщений партнера */
+        color: #ffffff; /* Цвет текста */
+        margin-right: auto; /* Выравнивание слева */
+        animation: slideInFromLeft 0.5s forwards;
+    }
+
+    .chat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 10px;
+        background-color: #163d5e; /* Темный фон для заголовка */
+    }
+
+    .btn-danger {
+        background-color: #e57373; /* Светло-красный цвет для кнопки удаления */
+    }
+
+    .btn-send {
+        background-image: linear-gradient(to right, #81c784 0%, #388e3c 100%); /* Зеленый градиент для кнопки отправки */
+    }
+
+    .timestamp {
+        display: block;
+        font-size: 1.65vh;
+        opacity: 0.75;
+        text-align: right;
+    }
+
+    .chat-input {
+        position: sticky; /* Используем sticky для прикрепления к нижней части */
+        bottom: 0; /* Прикрепляем к нижней части контейнера */
+        display: flex;
+        justify-content: center;
+        padding: 1.67vh;
+        border-radius: 1.67vh;
+        gap: 1.11vh;
+        background-color: #1a8ec2; /* Светло-синий фон для ввода текста */
+        width: 100%; /* Гарантируем, что элемент занимает всю ширину */
+    }
+
+
+        .chat-input input[type="text"] {
+            background: linear-gradient(145deg, #2a6fa8, #184f78);
+            border: 0.1vh solid #ccc;
+        }
+
+    button {
+        border: none;
+        padding: 1.11vh 2.22vh;
+        border-radius: 1.67vh;
+        font-size: 1.78vh;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .delete-chat-button {
+        position: absolute;
+        top: 1.11vh;
+        right: 1.11vw; 
+    }
 
     <style>
         @@keyframes slideInFromRight {
@@ -156,7 +163,6 @@ button {
 
 <div class="chat-layout">
     <div class="chat-header">
-        <h3>Chat</h3>
         <button class="btn btn-danger" @onclick="DeleteChat">Delete Chat</button>
     </div>
 
@@ -207,6 +213,7 @@ button {
                 };
                 Messages.Add(msg);
                 await InvokeAsync(StateHasChanged);
+                await JSRuntime.InvokeVoidAsync("scrollToBottom");
             });
 
             await hubConnection.StartAsync();
