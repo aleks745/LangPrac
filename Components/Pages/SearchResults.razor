@@ -13,7 +13,8 @@
     .page {
         background: url('searchbg.png') no-repeat center center fixed !important;
         background-size: cover !important;
-        height: 100vh !important;
+        background-attachment: fixed !important;
+        min-height: 100vh !important;
         width: 100vw !important;
         font-size: 2.1vh;
     }
@@ -127,6 +128,7 @@
     .language {
         background-color: #2c3e50;
         padding: 0.7vh;
+        width: 11vw;
         border-radius: 0.5vh;
         margin: 0.3vh 0;
         color: white;
@@ -196,22 +198,31 @@
             </div>
             <div class="info">
                 <strong>@CurrentUser.Nickname</strong> <br />
-                Country: @(!string.IsNullOrEmpty(CurrentUser.Country) ? CurrentUser.Country : "Unknown") <br />
-                Gender: @(!string.IsNullOrEmpty(CurrentUser.Gender) ? CurrentUser.Gender : "Unknown") <br />
-                <span>Age: @(CalculateAge(CurrentUser.DateOfBirth)?.ToString() ?? "Unknown")</span> <br />
+                Country: @(!string.IsNullOrEmpty(CurrentUser?.Country) ? CurrentUser.Country : "Unknown") <br />
+                Gender: @(!string.IsNullOrEmpty(CurrentUser?.Gender) ? CurrentUser.Gender : "Unknown") <br />
+                <span>Age: @(CalculateAge(CurrentUser?.DateOfBirth)?.ToString() ?? "Unknown")</span> <br />
                 <div class="language-info">
                     <strong>Languages Known:</strong>
-                    @foreach (var lang in CurrentUser.UserLanguages.Where(ul => ul.LanguageType == "Knows"))
+                    @if (CurrentUser?.UserLanguages?.Any(ul => ul.LanguageType == "Knows") == true)
                     {
-                        <div class="language">@lang.Language.LanguageName (@lang.LanguageLvl.GetEnumMemberValue())</div>
+                        @foreach (var lang in CurrentUser?.UserLanguages?.Where(ul => ul.LanguageType == "Knows"))
+                        {
+                            <div class="language">@lang?.Language.LanguageName (@lang?.LanguageLvl.GetEnumMemberValue())</div>
+                        }
                     }
                     <strong>Languages Learning:</strong>
-                    @foreach (var lang in CurrentUser.UserLanguages.Where(ul => ul.LanguageType == "Wants to Learn"))
+                    @if (CurrentUser?.UserLanguages != null && CurrentUser.UserLanguages.Any(ul => ul.LanguageType == "Wants to Learn"))
                     {
-                        <div class="language">@lang.Language.LanguageName (@lang.LanguageLvl.GetEnumMemberValue())</div>
+                        foreach (var lang in CurrentUser.UserLanguages.Where(ul => ul.LanguageType == "Wants to Learn"))
+                        {
+                            if (lang.Language != null && lang.LanguageLvl != null)
+                            {
+                                <div class="language">@lang.Language.LanguageName (@lang.LanguageLvl.GetEnumMemberValue())</div>
+                            }
+                        }
                     }
                 </div>
-                @if (invitationSent.ContainsKey(CurrentUser.Id) && invitationSent[CurrentUser.Id])
+                @if (invitationSent.ContainsKey(CurrentUser?.Id) && invitationSent[CurrentUser.Id])
                 {
                     <span class="invitation-sent">Invitation sent!</span>
                 }
@@ -221,13 +232,12 @@
                 }
             </div>
         </div>
-        @if (searchMessage != "No more partners found.")
+        @if (!isLoading && searchMessage != "No more partners found.")
         {
             <button class="btn-find-more" @onclick="FindMoreAsync">Find More</button>
         }
     }
 </div>
-
 
 @code {
     [Parameter]
@@ -255,7 +265,7 @@
         isLoading = true;
         UpdateState();
 
-        await Task.Delay(1500); 
+        await Task.Delay(1500);
 
         Users = await DbContext.Users
             .Where(u => userIdList.Contains(u.Id) && u.Id != UserManager.GetUserId(HttpContext.User))
@@ -264,16 +274,17 @@
 
         if (Users.Any())
         {
-            CurrentUser = Users.First();
+            CurrentUser = Users.FirstOrDefault();
+            isLoading = false;
         }
         else
         {
             searchMessage = "No matching users found.";
+            isLoading = false;
         }
-
-        isLoading = false;
         UpdateState();
     }
+
 
     private void GoBack()
     {

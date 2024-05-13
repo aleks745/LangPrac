@@ -17,6 +17,16 @@
 @inject IJSRuntime JSRuntime
 
 <style>
+
+    .page {
+        background: url('searchbg.png') no-repeat center center fixed !important;
+        background-size: cover !important;
+        background-attachment: fixed !important;
+        min-height: 100vh !important;
+        width: 100vw !important;
+        font-size: 2.1vh;
+    }
+
     .btn-danger {
         background-color: #dc3545;
         color: white;
@@ -35,90 +45,83 @@
             background-color: #218838;
         }
 
-    /* Стили для верхней панели с кнопкой "Удалить все" */
     .notifications-top-bar {
         display: flex;
-        justify-content: flex-end; /* Выравнивание элементов справа */
-        align-items: center; /* Вертикальное выравнивание */
-        padding: 10px; /* Отступы внутри бара */
+        justify-content: flex-end;
+        align-items: center;
+        padding: 1.3vh;
     }
 
     .delete-all-container {
-        margin-right: 10px; /* Отступ справа для контейнера с кнопкой */
+        margin-right: 1.3vh;
     }
 
-    /* Стили кнопки "Удалить все" */
     .delete-all-btn {
-        padding: 5px 15px; /* Паддинг внутри кнопки */
-        font-size: 0.9em; /* Размер шрифта текста в кнопке */
-        border-radius: 5px; /* Скругление углов кнопки */
-        cursor: pointer; /* Курсор в виде указателя */
-        border: 1px solid transparent; /* Прозрачная граница */
-        transition: background-color 0.2s, border-color 0.2s; /* Анимация изменения цвета */
+        padding: 0.65vh 1.95vh;
+        font-size: 2vh;
+        border-radius: 0.65vh;
+        cursor: pointer;
+        border: 0.13vh solid transparent;
+        transition: background-color 0.2s, border-color 0.2s;
     }
 
-    /* Стили контейнера для уведомлений */
     .notifications-container {
         display: flex;
-        flex-direction: column; /* Вертикальное выравнивание элементов */
-        align-items: center; /* Центрирование элементов по горизонтали */
-        width: 100%; /* Занимаем всю доступную ширину */
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
     }
 
-    /* Базовые стили для всех уведомлений */
     .notification {
-        border: 1px solid #ddd; /* Легкая рамка для блока */
-        margin-bottom: 15px; /* Отступ между уведомлениями */
-        padding: 10px 15px; /* Внутренние отступы блока */
-        border-radius: 8px; /* Скругление углов блока */
-        background-color: #f9f9f9; /* Цвет фона для уведомления */
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Тень для блока */
-        transition: background-color 0.3s; /* Плавное изменение фона при наведении */
-        max-width: 50%; /* Максимальная ширина уведомления */
-        width: 100%; /* Ширина блока уведомления */
+        border: 0.13vh solid rgba(255, 255, 255, 0.6);
+        margin-bottom: 1.95vh;
+        padding: 1.3vh 1.95vh;
+        border-radius: 1.04vh;
+        background-color: rgba(255, 255, 255, 0.75);
+        box-shadow: 0 0.26vh 0.65vh rgba(0,0,0,0.1);
+        transition: background-color 0.3s;
+        max-width: 50%;
+        width: 100%;
     }
 
         .notification:hover {
-            background-color: #f1f1f1; /* Цвет фона при наведении */
+            background-color: rgba(255, 255, 255, 1);
         }
 
         .notification p {
-            margin: 5px 0; /* Отступы для абзацев внутри уведомления */
-            color: #333; /* Цвет текста */
+            margin: 0.65vh 0;
+            color: #333;
         }
 
-        /* Стили для даты и времени отправки */
         .notification time {
-            display: block; /* Блочное отображение */
-            font-size: 0.85em; /* Меньший размер шрифта для времени */
-            color: #666; /* Цвет шрифта для времени */
+            display: block;
+            font-size: 1.1vh;
+            color: #666;
         }
 
-        /* Стили для кнопок в уведомлениях */
         .notification .btn {
-            margin-top: 8px;
-            margin-right: 5px;
-            padding: 5px 10px;
-            font-size: 0.9em;
-            border-radius: 4px;
+            margin-top: 1.04vh;
+            margin-right: 0.65vh;
+            padding: 0.65vh 1.3vh;
+            font-size: 2vh;
+            border-radius: 0.52vh;
             cursor: pointer;
-            border: 1px solid transparent;
+            border: 0.13vh solid transparent;
             transition: background-color 0.2s, border-color 0.2s;
         }
 
-        /* Индивидуальные стили для различных статусов уведомлений */
         .notification[data-status="Pending"] {
-            border-color: #ffc107; /* Желтая рамка для ожидающих уведомлений */
+            border-color: #ffc107;
         }
 
         .notification[data-status="Accepted"] {
-            border-color: #28a745; /* Зеленая рамка для принятых уведомлений */
-            background-color: #e6f9e6; /* Зеленый фон */
+            border-color: #28a745;
+            background-color: #e6f9e6;
         }
 
         .notification[data-status="Declined"] {
-            border-color: #dc3545; /* Красная рамка для отклоненных уведомлений */
-            background-color: #f9e6e6; /* Красный фон */
+            border-color: #dc3545;
+            background-color: #f9e6e6;
         }
 </style>
 
