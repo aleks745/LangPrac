@@ -12,113 +12,162 @@
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
 
 <style>
-body {
-    overflow-y: hidden; /* Запрет прокрутки и скрытие скроллбара */
-}
+    body {
+        overflow-y: hidden;
+    }
 
-.page {
-    background: url('searchbg.png') no-repeat center center fixed !important;
-    background-size: cover !important;
-    background-attachment: fixed !important;
-    min-height: 100vh !important;
-    width: 100vw !important;
-    font-size: 2.1vh;
-}
+    .page {
+        background: url('searchbg.png') no-repeat center center fixed !important;
+        background-size: cover !important;
+        background-attachment: fixed !important;
+        min-height: 100vh !important;
+        width: 100vw !important;
+        font-size: 2.1vh;
+    }
 
-.chat-layout {
-    display: flex;
-    flex-direction: column;
-    height: 85vh;
-    background-color: #2d3e50;
-    border-radius: 2.22vh;
-}
+    .chat-layout {
+        display: flex;
+        flex-direction: column;
+        height: 85vh;
+        background-color: #2d3e50;
+        border-radius: 2.22vh;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 500;
+    }
 
-.chat-header {
-    display: flex;
-    align-items: center;
-    padding: 1.11vh 2.22vw;
-    background-color: #2d3e50;
-    color: white;
-    font-size: 2.5vh;
-    font-weight: bold;
-}
+    .chat-header {
+        display: flex;
+        align-items: center;
+        padding: 1.11vh 2.22vw;
+        background-color: #2d3e50;
+        color: white;
+        font-size: 2.5vh;
+        font-weight: bold;
+        min-height: 8vh;
+    }
 
-.chat-header .delete-chat-button {
-    margin-left: auto;
-    padding: 1.11vh 2.22vh;
-    background-color: #e57373;
-    border: none;
-    border-radius: 1.11vh;
-    cursor: pointer;
-}
+        .chat-header .delete-chat-button {
+            margin-left: auto;
+            padding: 0.3vh;
+            background-color: #e57373;
+            border: none;
+            border-radius: 1.11vh;
+            cursor: pointer;
+        }
 
-.chat-container {
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
         overflow-x: hidden;
-    height: 74vh;
-    padding: 1.11vh 2.22vw;
-    background-color: #53618b;
-    color: #ffffff;
-}
+        height: 74vh;
+        padding: 1.11vh 2.22vw;
+        background-color: #53618b;
+        color: #ffffff;
+    }
 
-.chat-container::-webkit-scrollbar {
-    width: 0.28vw; /* ширина полосы прокрутки */
-}
+        .chat-container::-webkit-scrollbar {
+            width: 0.28vw; /* ширина полосы прокрутки */
+        }
 
-.chat-container::-webkit-scrollbar-track {
-    background: #aaa; /* светло-синий цвет дорожки */
-    border-radius: 1.11vh;
-}
+        .chat-container::-webkit-scrollbar-track {
+            background: #aaa; /* светло-синий цвет дорожки */
+            border-radius: 1.11vh;
+        }
 
-.chat-container::-webkit-scrollbar-thumb {
-    background: #888; /* зеленый цвет ползунка */
-    border-radius: 1.11vh;
-}
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #888; /* зеленый цвет ползунка */
+            border-radius: 1.11vh;
+        }
 
-.chat-container::-webkit-scrollbar-thumb:hover {
-    background: #555; /* темно-зеленый цвет ползунка при наведении */
-}
+            .chat-container::-webkit-scrollbar-thumb:hover {
+                background: #555; /* темно-зеленый цвет ползунка при наведении */
+            }
 
-.message {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    max-width: 70%;
-    padding: 0.89vh 1.78vh;
-    margin-bottom: 1.11vh;
-    border-radius: 2.22vh;
-    word-wrap: break-word; /* Перенос слов */
-    overflow-wrap: break-word; /* Перенос слов */
-    word-break: break-all; /* Перенос длинных слов */
-}
+    .message-container {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 3vh;
+    }
 
-.user-message {
-    background-color: #4caf50; /* Зеленый цвет для сообщений пользователя */
-    margin-left: auto; /* Выравнивание справа */
-    animation: slideInFromRight 0.5s forwards;
-}
+    .message {
+        max-width: 70%;
+        padding: 0.5vh 1.3vh;
+        border-radius: 2.22vh;
+        word-wrap: break-word; /* Перенос слов */
+        overflow-wrap: break-word; /* Перенос слов */
+        word-break: break-all; /* Перенос длинных слов */
+        color: black;
+    }
 
-.partner-message {
-    background-color: #82ccdd;
-    color: #ffffff; /* Цвет текста */
-    margin-right: auto; /* Выравнивание слева */
-    animation: slideInFromLeft 0.5s forwards;
-}
+    .user-message {
+        background-color: #78e08f; /* Зеленый цвет для сообщений пользователя */
+        margin-left: auto; /* Выравнивание справа */
+        display: flex;
+        flex-direction: row-reverse; /* Перевернуть порядок для выравнивания справа */
+        animation: slideInFromRight 0.5s forwards;
+    }
 
-.timestamp {
-    position: absolute;
-    right: 0;
-    bottom: -15px;
-    color: black;
-    font-size: 10px;
-}
+    .partner-message {
+        background-color: #82ccdd;
+        color: #ffffff; /* Цвет текста */
+        margin-right: auto; /* Выравнивание слева */
+        display: flex;
+        animation: slideInFromLeft 0.5s forwards;
+    }
+
+    .img_cont_msg {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 2.22vh;
+        width: 2.08vw;
+    }
+
+    .user-message .img_cont_msg {
+        display: none;
+    }
+
+    .user_img_msg {
+        width: 6vh;
+        height: 6vh;
+
+        border-radius: 50%;
+        animation: slideInFromLeft 0.3s forwards;
+    }
+
+    .msg_container {
+        display: flex;
+        flex-direction: column;
+        background-color: inherit;
+        padding: 0.93vh;
+        border-radius: 2.22vh;
+        word-wrap: break-word; /* Перенос слов */
+        overflow-wrap: break-word; /* Перенос слов */
+        word-break: break-all; /* Перенос длинных слов */
+    }
+
+    .msg_time {
+        position: absolute;
+        left: 0;
+        bottom: -2.1vh;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.5vh;
+    }
+
+    .msg_time_send{
+        position: absolute;
+        right: 0;
+        bottom: -2.1vh;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.5vh;
+    }
 
     .card-footer {
-        border-radius: 0 0 15px 15px !important;
+        border-radius: 0 0 1.67vh 1.67vh !important;
         border-top: 0 !important;
         background-color: #53618b;
     }
@@ -127,67 +176,63 @@ body {
         background-color: rgba(0, 0, 0, 0.3) !important;
         border: 0 !important;
         color: white !important;
-        height: 60px !important;
+        height: 6.67vh !important;
         overflow-y: auto;
     }
 
         .type_msg:focus {
             box-shadow: none !important;
-            outline: 0px !important;
+            outline: 0vh !important;
         }
 
     .send_btn {
-        border-radius: 0 25px 25px 0 !important;
+        border-radius: 0 2.78vh 2.78vh 0 !important;
         background-color: rgba(0, 0, 0, 0.3) !important;
         border: 0 !important;
         color: white !important;
         cursor: pointer;
-        padding: 0 15px !important;
+        padding: 0 2.22vh !important;
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
         .send_btn i {
-            font-size: 20px; /* Размер иконки */
+            font-size: 2.22vh; /* Размер иконки */
             color: white; /* Цвет иконки */
         }
-
 
     .input-group-prepend,
     .input-group-append {
         display: flex;
-        // Ensure buttons are always above inputs for more visually pleasing borders. // This isn't needed for `.input-group-text` since it shares the same border-color // as our inputs. .btn
-
-    {
-        position: relative;
         z-index: 2;
     }
 
-@@keyframes slideInFromRight {
-    0% {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    100% {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
+    @@keyframes slideInFromRight {
+        0% {
+            transform: translateX(100%);
+            opacity: 0;
+        }
 
-@@keyframes slideInFromLeft {
-    0% {
-        transform: translateX(-100%);
-        opacity: 0;
-    }
-    100% {
-        transform: translateX(0);
-        opacity: 1;
+        100% {
+            transform: translateX(0);
+            opacity: 1;
+        }
     }
 
-}
+    @@keyframes slideInFromLeft {
+        0% {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
 
+        100% {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
 </style>
+
 
 <div class="chat-layout">
     <div class="chat-header">
@@ -196,19 +241,68 @@ body {
     </div>
 
     <div class="chat-container" id="chatContainer">
-        @foreach (var message in Messages)
+        @foreach (var message in Messages.ToList())
         {
-            <div class="@($"message {(message.SenderId == CurrentUserId ? "user-message" : "partner-message")}")">
-                <div>
-                    <strong>@message.Sender.Nickname:</strong> @message.Content
+            <div class="message-container">
+                @if (message.SenderId != CurrentUserId)
+                {
+                    <div class="img_cont_msg">
+                        <img src="@($"data:image/png;base64,{Convert.ToBase64String(message.Sender.AvatarImage ?? new byte[0])}")" class="rounded-circle user_img_msg" alt="avatar" />
+                    </div>
+                }
+                <div class="@($"message {(message.SenderId == CurrentUserId ? "user-message" : "partner-message")}")">
+                    <div class="msg_container">
+                        <div>@message.Content</div>
+                        @if (message.SenderId != CurrentUserId)
+                        {
+                        <span class="msg_time">
+                            @if (message.Timestamp.Date == DateTime.UtcNow.Date)
+                            {
+                                <text>@message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                            }
+                            else if (message.Timestamp.Date == DateTime.UtcNow.Date.AddDays(-1))
+                            {
+                                <text>Вчера @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                            }
+                            else if (message.Timestamp.Date == DateTime.UtcNow.Date.AddDays(-2))
+                            {
+                                <text>Позавчера @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                            }
+                            else
+                            {
+                                <text>@message.Timestamp.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</text>
+                            }
+                        </span>
+                        }
+                        else
+                        {
+                            <span class="msg_time_send">
+                                @if (message.Timestamp.Date == DateTime.UtcNow.Date)
+                                {
+                                    <text>@message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                                }
+                                else if (message.Timestamp.Date == DateTime.UtcNow.Date.AddDays(-1))
+                                {
+                                    <text>Вчера @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                                }
+                                else if (message.Timestamp.Date == DateTime.UtcNow.Date.AddDays(-2))
+                                {
+                                    <text>Позавчера @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                                }
+                                else
+                                {
+                                    <text>@message.Timestamp.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</text>
+                                }
+                            </span>
+                        }
+                    </div>
                 </div>
-                <span class="timestamp">@message.Timestamp.ToLocalTime().ToString("HH:mm")</span>
             </div>
         }
     </div>
     <div class="card-footer">
         <div class="input-group">
-            <textarea name="" class="form-control type_msg" placeholder="Type your message..." type="text" @bind="NewMessage" @onkeypress="HandleKeyPress"></textarea>
+            <textarea name="" class="form-control type_msg" placeholder="Type your message..." type="text" @bind="NewMessage"></textarea>
             <div class="input-group-append">
                 <span class="input-group-text send_btn" @onclick="SendMessage">
                     <i class="fas fa-location-arrow"></i>
@@ -216,7 +310,6 @@ body {
             </div>
         </div>
     </div>
-
 </div>
 
 @code {
@@ -243,14 +336,19 @@ body {
             {
                 var sender = await UserManager.FindByIdAsync(userId);
                 var msg = new ChatMessage
-                    {
-                        SenderId = userId,
-                        Content = message,
-                        Timestamp = DateTime.UtcNow,
-                        Sender = sender
-                    };
-                Messages.Add(msg);
-                await InvokeAsync(StateHasChanged);
+                {
+                    SenderId = userId,
+                    Content = message,
+                    Timestamp = DateTime.UtcNow,
+                    Sender = sender
+                };
+
+                await InvokeAsync(() =>
+                {
+                    Messages.Add(msg);
+                    StateHasChanged();
+                });
+
                 await JSRuntime.InvokeVoidAsync("scrollToBottom");
             });
 
@@ -276,14 +374,6 @@ body {
             await hubConnection.InvokeAsync("SendMessage", int.Parse(ChatId), CurrentUserId, NewMessage);
             NewMessage = string.Empty;
             await ScrollToBottom(); // Вызов прокрутки после отправки сообщения
-        }
-    }
-
-    private async Task HandleKeyPress(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(NewMessage))
-        {
-            await SendMessage();
         }
     }
 
