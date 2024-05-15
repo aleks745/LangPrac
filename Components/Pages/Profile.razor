@@ -47,7 +47,7 @@
         padding: 2vh;
         border-radius: 1vh;
         box-shadow: 0 0.4vh 0.8vh rgba(0, 0, 0, 0.2);
-        max-width: 35vw;
+        max-width: 60vw; /* Увеличиваем ширину контейнера */
         width: 100%;
     }
 
@@ -68,8 +68,8 @@
 
     .avatar-container {
         position: relative;
-        width: 15vh;
-        height: 15vh;
+        width: 20vh; /* Увеличиваем размер аватарки */
+        height: 20vh; /* Увеличиваем размер аватарки */
         border: 0.1vh solid #ccc;
         border-radius: 50%;
         overflow: hidden;
@@ -115,12 +115,17 @@
         background-color: #e9ecef;
     }
 
-    /* Custom styles for the modal buttons */
+    .manage-buttons-container {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        margin-top: 1vh;
+    }
+
     .btn-info, .btn-danger {
         margin: 1vh;
     }
 
-    /* Style for the close button in the modal */
     .modal-close-button {
         display: flex;
         justify-content: center;
@@ -129,20 +134,39 @@
         margin-right: 2.3vw;
     }
 
+    .btn-manage-languages {
+        background-color: #007bff;
+        color: white;
+        border-radius: 1vh;
+        padding: 1vh 2vh;
+        font-size: 2vh;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-manage-languages:hover {
+        background-color: #0056b3;
+    }
+
+    .profile-email-container {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .profile-form, .email-form {
+        width: 48%;
+    }
+
 </style>
-
-
-
-
 
 <PageTitle>Profile Management</PageTitle>
 
 <div class="ppage">
     <div class="content-container">
         <div class="elements">
-            <h3>Profile</h3>
-            <p>@profileMessage</p>
             <div class="row">
+                <button class="btn btn-manage-languages" @onclick="OpenLanguagesModal">Manage languages</button>
                 <div class="avatar-container">
                     @if (user is not null && user.AvatarImage is not null)
                     {
@@ -156,7 +180,11 @@
                     }
                     <InputFile OnChange="@LoadAvatar" accept="image/*" class="avatar-input" />
                 </div>
-                <div class="col-md-6">
+            </div>
+            <div class="profile-email-container">
+                <div class="profile-form">
+                    <h3>Profile</h3>
+                    <p>@profileMessage</p>
                     <EditForm Model="ProfileInput" OnValidSubmit="OnValidSubmitProfileAsync">
                         <DataAnnotationsValidator />
                         <ValidationSummary class="text-danger" role="alert" />
@@ -197,12 +225,10 @@
                         <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
                     </EditForm>
                 </div>
-            </div>
 
-            <h3>Manage email</h3>
-            <p>@emailMessage</p>
-            <div class="row">
-                <div class="col-md-6">
+                <div class="email-form">
+                    <h3>Manage email</h3>
+                    <p>@emailMessage</p>
                     <EditForm Model="EmailInput" OnValidSubmit="OnValidSubmitEmailAsync">
                         <DataAnnotationsValidator />
                         <ValidationSummary class="text-danger" role="alert" />
@@ -220,11 +246,11 @@
                         </div>
                         <button type="submit" class="w-100 btn btn-lg btn-primary">Change email</button>
                     </EditForm>
+                    <button class="btn btn-info" @onclick="OpenPasswordModal">Manage password</button>
                 </div>
             </div>
 
-            <button class="btn btn-info" @onclick="OpenLanguagesModal">Manage languages</button>
-            <Modal BootstrapClass="border-success" CustomStyle="width:40vw" Open="IsLanguagesModelOpen">
+            <Modal BootstrapClass="border-success" CustomStyle="width:40vw; border-radius: 1vh;" Open="IsLanguagesModelOpen">
                 <ContentContent>
                     <p class="text-center text-muted">
                         <h3>Languages</h3>
@@ -304,8 +330,7 @@
                 </ButtonTemplate>
             </Modal>
 
-            <button class="btn btn-info" @onclick="OpenPasswordModal">Manage password</button>
-            <Modal BootstrapClass="border-success" CustomStyle="width:40vw" Open="IsPasswordModelOpen">
+            <Modal BootstrapClass="border-success" CustomStyle="width:40vw; border-radius: 1vh;" Open="IsPasswordModelOpen">
                 <ContentContent>
                     <p class="text-center text-muted">
                         <h3>Change password</h3>
@@ -345,8 +370,6 @@
         </div>
     </div>
 </div>
-
-
 
 @code {
     private ApplicationUser user = default!;
