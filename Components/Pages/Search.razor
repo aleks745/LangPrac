@@ -361,40 +361,71 @@
     private async Task AdvancedSearchAsync()
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
-        var query = DbContext.Users
+
+        // Получаем всех пользователей, кроме текущего
+        var allUsers = await DbContext.Users
             .Include(u => u.UserLanguages)
             .Where(u => u.Id != user.Id)
+            .ToListAsync();
+
+        // Фильтруем пользователей по языковым навыкам (знает нужный язык)
+        var filteredUsers = allUsers
             .Where(u => u.UserLanguages.Any(ul => ul.LanguageId == selectedLanguageId &&
                                                   ul.LanguageType == "Knows" &&
                                                   ul.LanguageLvl >= partnerLanguageLevelFrom &&
-                                                  ul.LanguageLvl <= partnerLanguageLevelTo));
+                                                  ul.LanguageLvl <= partnerLanguageLevelTo))
+            .ToList();
+
+        // Получаем языки, которые знает текущий пользователь
+        var userKnowsLanguages = user.UserLanguages
+            .Where(ul => ul.LanguageType == "Knows")
+            .Select(ul => ul.LanguageId)
+            .ToList();
+
+        // Создаем временный список для проверки пользователей на второй фильтрации
+        var tempFilteredUsers = new List<ApplicationUser>();
+
+        foreach (var u in filteredUsers)
+        {
+            var userWantsToLearn = u.UserLanguages
+                .Where(ul => ul.LanguageType == "Wants to Learn")
+                .Select(ul => ul.LanguageId)
+                .ToList();
+
+            // Проверка, хотят ли пользователи учить языки, которые знает текущий пользователь
+            if (userWantsToLearn.Intersect(userKnowsLanguages).Any())
+            {
+                tempFilteredUsers.Add(u);
+            }
+        }
+
+        filteredUsers = tempFilteredUsers;
 
         if (!anyAgeSelected)
         {
-            query = query.Where(u => u.DateOfBirth.HasValue &&
-                                     u.DateOfBirth.Value.AddYears(ageFrom.GetValueOrDefault(0)) <= today &&
-                                     u.DateOfBirth.Value.AddYears(ageTo.GetValueOrDefault(150)) >= today);
+            filteredUsers = filteredUsers.Where(u => u.DateOfBirth.HasValue &&
+                                                     u.DateOfBirth.Value.AddYears(ageFrom.GetValueOrDefault(0)) <= today &&
+                                                     u.DateOfBirth.Value.AddYears(ageTo.GetValueOrDefault(150)) >= today)
+                                         .ToList();
         }
 
-        // Фильтрация по полу с учетом пользователей с неуказанным полом
+        // Фильтрация по полу
         if (!string.IsNullOrEmpty(selectedGender) && selectedGender != "Any")
         {
-            query = query.Where(u => u.Gender == selectedGender);
+            filteredUsers = filteredUsers.Where(u => u.Gender == selectedGender).ToList();
         }
         else if (selectedGender == "Any")
         {
-            query = query.Where(u => string.IsNullOrEmpty(u.Gender) || u.Gender == "Unknown" || u.Gender == "Male" || u.Gender == "Female" || u.Gender == "Other");
+            filteredUsers = filteredUsers.Where(u => string.IsNullOrEmpty(u.Gender) || u.Gender == "Unknown" || u.Gender == "Male" || u.Gender == "Female" || u.Gender == "Other").ToList();
         }
 
-        var users = await query.ToListAsync();
-
-        if (users.Count == 0)
+        if (filteredUsers.Count == 0)
         {
             searchMessage = "No matching users found.";
         }
         else
         {
-            var userIds = users.Select(u => u.Id).ToList();
+            var userIds = filteredUsers.Select(u => u.Id).ToList();
             NavigationManager.NavigateTo($"search-results/{string.Join(",", userIds)}");
         }
     }

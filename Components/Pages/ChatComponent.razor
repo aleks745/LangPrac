@@ -360,6 +360,7 @@
 
             var partner = chat.User1Id == CurrentUserId ? chat.User2 : chat.User1;
             PartnerName = partner?.Nickname ?? "Chat";
+            StateHasChanged();
         }
         else
         {
