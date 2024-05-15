@@ -7,18 +7,132 @@
 @inject ApplicationDbContext DbContext
 @inject IChatService ChatService
 @inject IHttpContextAccessor HttpContextAccessor
+@inject IJSRuntime JSRuntime
 
-<h3>Chats</h3>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
 
-<ul>
-    @foreach (var chat in UserChats)
-    {
-        <li>
-            <a href="/chat/@chat.Id">Chat with @GetOtherUserName(chat)</a>
-            <button class="btn btn-danger" @onclick="() => DeleteChat(chat.Id)">Delete</button>
-        </li>
+<style>
+    body {
+        overflow-y: hidden;
     }
-</ul>
+
+    .page {
+        background: url('searchbg.png') no-repeat center center fixed !important;
+        background-size: cover !important;
+        background-attachment: fixed !important;
+        min-height: 100vh !important;
+        width: 100vw !important;
+        font-size: 2.1vh;
+    }
+
+    .chat-list-layout {
+        display: flex;
+        flex-direction: column;
+        background-color: #2d3e50;
+        border-radius: 2.22vh;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 500;
+    }
+
+    .chat-list-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.11vh 2.22vw;
+        background-color: #2d3e50;
+        color: white;
+        font-size: 2.5vh;
+        font-weight: bold;
+        min-height: 8vh;
+    }
+
+    .chat-list-container {
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+        height: 77vh;
+        padding: 1.11vh 2.22vw;
+        background-color: #53618b;
+        color: #ffffff;
+    }
+
+        .chat-list-container::-webkit-scrollbar {
+            width: 0.28vw;
+        }
+
+        .chat-list-container::-webkit-scrollbar-track {
+            background: #aaa;
+            border-radius: 1.11vh;
+        }
+
+        .chat-list-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 1.11vh;
+        }
+
+            .chat-list-container::-webkit-scrollbar-thumb:hover {
+                background: #555;
+            }
+
+    .chat-list-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.11vh 2.22vw;
+        background-color: #2d3e50;
+        color: white;
+        border-radius: 1.11vh;
+        margin-bottom: 1.11vh;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+        .chat-list-item:hover {
+            background-color: #3b4a63;
+        }
+
+    .chat-content {
+        flex-grow: 1;
+    }
+
+    .delete-chat-button {
+        background-color: #e57373;
+        border: none;
+        border-radius: 1.11vh;
+        cursor: pointer;
+        padding: 0.5vh 1.1vh;
+    }
+
+    .chat-info {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.5vh;
+        font-size: 1.8vh;
+        color: #cccccc;
+    }
+</style>
+
+<div class="chat-list-layout">
+    <div class="chat-list-header">
+        Chats
+    </div>
+    <div class="chat-list-container">
+        @foreach (var chat in UserChats)
+        {
+            <div class="chat-list-item">
+                <div class="chat-content" @onclick="() => NavigateToChat(chat.Id)">
+                    <span>Chat with @GetOtherUserName(chat)</span>
+                    <div class="chat-info">
+                        <span style="font-size: 1.5vh">Created: @chat.CreatedDate.ToString("dd.MM.yyyy")</span>
+                    </div>
+                </div>
+                <button class="delete-chat-button" @onclick:stopPropagation @onclick="@((e) => DeleteChat(e, chat.Id))">Delete</button>
+            </div>
+        }
+    </div>
+</div>
 
 @code {
     private List<Chat> UserChats = new List<Chat>();
@@ -29,8 +143,11 @@
         var httpContext = HttpContextAccessor.HttpContext;
         if (httpContext.User.Identity.IsAuthenticated)
         {
-            CurrentUserId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            UserChats = await ChatService.GetUserChatsAsync(CurrentUserId);
+            CurrentUserId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (CurrentUserId != null)
+            {
+                UserChats = await ChatService.GetUserChatsAsync(CurrentUserId) ?? new List<Chat>();
+            }
         }
         else
         {
@@ -47,9 +164,15 @@
         return string.Empty;
     }
 
-    private async Task DeleteChat(int chatId)
+    private void NavigateToChat(int chatId)
+    {
+        NavigationManager.NavigateTo($"/chat/{chatId}");
+    }
+
+    private async Task DeleteChat(MouseEventArgs e, int chatId)
     {
         await ChatService.DeleteChatAsync(chatId);
         UserChats = await ChatService.GetUserChatsAsync(CurrentUserId);
+        StateHasChanged();
     }
 }

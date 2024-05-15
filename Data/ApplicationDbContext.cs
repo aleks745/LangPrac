@@ -60,6 +60,10 @@ namespace LangPrac.Data
                 .HasForeignKey(c => c.User2Id)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Chat>()
+                .Property(c => c.CreatedDate)
+                .HasDefaultValueSql("GETDATE()");
+
             // Одно сообщение связано с одним чатом
             // Чат может содержать множество сообщений
             // Внешний ключ ChatId в таблице ChatMessages ссылается на Id в таблице Chats
