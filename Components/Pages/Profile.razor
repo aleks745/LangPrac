@@ -23,21 +23,36 @@
 @inject ILogger<ChangePassword> Logger
 
 <style>
-    /* Основной фон страницы */
     body {
-        background-color: #e0e0ec;
+        overflow-x: hidden;
     }
 
-    /* Центрирование и размер контейнера контента */
-    .content-container {
-        background-color: #e0e0ec;
-        margin: 0 auto; /* центрирование */
+    .page {
+        background: url('searchbg.png') no-repeat center center fixed !important;
+        background-size: cover !important;
+        background-attachment: fixed !important;
+        min-height: 100vh !important;
+        width: 100vw !important;
+        font-size: 2.1vh;
+    }
+
+    .ppage {
         display: flex;
-        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .content-container {
+        background-color: rgba(224, 224, 236, 0.9);
+        padding: 2vh;
+        border-radius: 1vh;
+        box-shadow: 0 0.4vh 0.8vh rgba(0, 0, 0, 0.2);
+        max-width: 35vw;
+        width: 100%;
     }
 
     .elements {
-        margin: 10px 20% 10px;
+        margin: 1vh;
         text-align: center;
     }
 
@@ -53,11 +68,12 @@
 
     .avatar-container {
         position: relative;
-        width: 200px;
-        height: 200px;
-        border: 1px solid #ccc;
+        width: 15vh;
+        height: 15vh;
+        border: 0.1vh solid #ccc;
         border-radius: 50%;
         overflow: hidden;
+        margin-bottom: 2vh;
     }
 
     .avatar-image {
@@ -74,7 +90,7 @@
         height: 100%;
         background-color: #f8f9fa;
         color: #6c757d;
-        font-size: 1.2rem;
+        font-size: 1.2vh;
     }
 
     .avatar-input {
@@ -87,228 +103,250 @@
         cursor: pointer;
     }
 
+    .form-floating {
+        margin-bottom: 1vh;
+    }
+
+    .btn {
+        margin-top: 1vh;
+    }
+
+    .input-group .form-control:disabled, .input-group .form-control[readonly] {
+        background-color: #e9ecef;
+    }
+
+    /* Custom styles for the modal buttons */
+    .btn-info, .btn-danger {
+        margin: 1vh;
+    }
+
+    /* Style for the close button in the modal */
+    .modal-close-button {
+        display: flex;
+        justify-content: center;
+        margin-top: 2vh;
+        align-items: center;
+        margin-right: 2.3vw;
+    }
+
 </style>
+
+
+
 
 
 <PageTitle>Profile Management</PageTitle>
 
-<div class="content-container">
-    <div class="elements">
-        <h3>Profile</h3>
-        <p>@profileMessage</p>
-        <div class="row">
-            <div class="avatar-container">
-                @if (user is not null && user.AvatarImage is not null)
-                {
-                    <img src="@($"data:image/jpeg;base64,{Convert.ToBase64String(user.AvatarImage)}")" alt="Avatar" class="avatar-image" />
-                }
-                else
-                {
-                    <div class="avatar-placeholder">
-                        <span>Upload Avatar</span>
-                    </div>
-                }
-                <InputFile OnChange="@LoadAvatar" accept="image/*" class="avatar-input" />
-            </div>
-            <div class="col-md-6">
-                <EditForm Model="ProfileInput" OnValidSubmit="OnValidSubmitProfileAsync">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary class="text-danger" role="alert" />
-                    <div class="form-floating mb-3">
-                        <InputText @bind-Value="ProfileInput.Nickname" class="form-control" placeholder="Please enter your nickname." />
-                        <label for="nickname" class="form-label">Nickname</label>
-                        <ValidationMessage For="() => ProfileInput.Nickname" class="text-danger" />
-                    </div>
-                    <div class="form-floating mb-3">
-                        <InputText @bind-Value="ProfileInput.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
-                        <label for="phone-number" class="form-label">Phone number</label>
-                        <ValidationMessage For="() => ProfileInput.PhoneNumber" class="text-danger" />
-                    </div>
-                    <div class="form-floating mb-3">
-                        <InputDate @bind-Value="ProfileInput.DateOfBirth" class="form-control" placeholder="Please enter your date of birth." />
-                        <label for="date-of-birth" class="form-label">Date of birth</label>
-                        <ValidationMessage For="() => ProfileInput.DateOfBirth" class="text-danger" />
-                    </div>
-                    <div class="form-floating mb-3">
-                        <InputSelect @bind-Value="ProfileInput.Country" class="form-control">
-                            <option value="">Select your country</option>
-                            @foreach (var country in countries)
-                            {
-                                <option value="@country">@country</option>
-                            }
-                        </InputSelect>
-                        <label for="country" class="form-label">Country</label>
-                    </div>
-                    <div class="form-floating mb-3">
-                        <InputSelect @bind-Value="ProfileInput.Gender" class="form-control">
-                            <option value="">Select your gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </InputSelect>
-                        <label for="gender" class="form-label">Gender</label>
-                    </div>
-                    <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
-                </EditForm>
-            </div>
-        </div>
-
-        <h3>Manage email</h3>
-        <p>@emailMessage</p>
-        <div class="row">
-            <div class="col-md-6">
-                <EditForm Model="EmailInput" OnValidSubmit="OnValidSubmitEmailAsync">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary class="text-danger" role="alert" />
-                    <div class="form-floating mb-3 input-group">
-                        <input type="text" value="@email" class="form-control" placeholder="Please enter your email." disabled />
-                        <div class="input-group-append">
-                            <span class="h-100 input-group-text text-success font-weight-bold">✓</span>
-                        </div>
-                        <label for="email" class="form-label">Email</label>
-                    </div>
-                    <div class="form-floating mb-3">
-                        <InputText @bind-Value="EmailInput.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="Please enter new email." />
-                        <label for="new-email" class="form-label">New email</label>
-                        <ValidationMessage For="() => EmailInput.NewEmail" class="text-danger" />
-                    </div>
-                    <button type="submit" class="w-100 btn btn-lg btn-primary">Change email</button>
-                </EditForm>
-    </div>
-</div>
-    </div>
-</div>
-
-@* Модальное окно Languages *@
-<button class="btn btn-info" @onclick="OpenLanguagesModal">Manage languages</button>
-<Modal BootstrapClass="border-success" 
-       CustomStyle="width:650px"
-       Open="IsLanguagesModelOpen">
-
-    <ContentContent>
-        <p class="text-center text-muted">
-            <h3>Languages</h3>
-            <StatusMessage />
-
+<div class="ppage">
+    <div class="content-container">
+        <div class="elements">
+            <h3>Profile</h3>
+            <p>@profileMessage</p>
             <div class="row">
-                <div class="col-md-0">
-                    <!-- ... -->
-                </div>
-                <div class="col-md-6">
-                    <h4>Your Languages</h4>
-                    @if (userLanguages.Count > 0)
+                <div class="avatar-container">
+                    @if (user is not null && user.AvatarImage is not null)
                     {
-                        <ul class="list-group">
-                            @foreach (var userLanguage in userLanguages)
-                            {
-                                <li @key="userLanguage.LanguageId" class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>@userLanguage.Language.LanguageName</strong> - @userLanguage.LanguageLvl (@userLanguage.LanguageType)
-                                    </div>
-                                    <button class="btn btn-danger btn-sm"  @onclick="() => DeleteUserLanguageAsync(userLanguage)">Delete</button>
-                                </li>
-                            }
-                        </ul>
+                        <img src="@($"data:image/jpeg;base64,{Convert.ToBase64String(user.AvatarImage)}")" alt="Avatar" class="avatar-image" />
                     }
                     else
                     {
-                        <p>You haven't added any languages yet.</p>
+                        <div class="avatar-placeholder">
+                            <span>Upload Avatar</span>
+                        </div>
                     }
+                    <InputFile OnChange="@LoadAvatar" accept="image/*" class="avatar-input" />
                 </div>
-            </div>
-
-            <div class="row">
                 <div class="col-md-6">
-                    <EditForm Model="LanguageInput" OnValidSubmit="OnValidSubmitLanguagesAsync">
+                    <EditForm Model="ProfileInput" OnValidSubmit="OnValidSubmitProfileAsync">
                         <DataAnnotationsValidator />
                         <ValidationSummary class="text-danger" role="alert" />
                         <div class="form-floating mb-3">
-                            <InputSelect @bind-Value="LanguageInput.LanguageType" class="form-control">
-                                <option value="">Select language type</option>
-                                <option value="Knows">Knows</option>
-                                <option value="Wants to Learn">Wants to Learn</option>
-                            </InputSelect>
-                            <label for="language-type" class="form-label">Language Type</label>
-                            <ValidationMessage For="() => LanguageInput.LanguageType" class="text-danger" />
+                            <InputText @bind-Value="ProfileInput.Nickname" class="form-control" placeholder="Please enter your nickname." />
+                            <label for="nickname" class="form-label">Nickname</label>
+                            <ValidationMessage For="() => ProfileInput.Nickname" class="text-danger" />
                         </div>
                         <div class="form-floating mb-3">
-                            <InputSelect @bind-Value="LanguageInput.LanguageId" class="form-control">
-                                <option value="">Select a language</option>
-                                @foreach (var language in languages)
-                                {
-                                    <option value="@language.LanguageId">@language.LanguageName</option>
-                                }
-                            </InputSelect>
-                            <label for="language" class="form-label">Language</label>
-                            <ValidationMessage For="() => LanguageInput.LanguageId" class="text-danger" />
+                            <InputText @bind-Value="ProfileInput.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
+                            <label for="phone-number" class="form-label">Phone number</label>
+                            <ValidationMessage For="() => ProfileInput.PhoneNumber" class="text-danger" />
                         </div>
                         <div class="form-floating mb-3">
-                            <select @bind="selectedLanguageLvl" placeholder="Please enter your language level.">
-                                @foreach (var lvl in Enum.GetValues(typeof(LanguageLvl)))
-                                {
-                                    var enumValue = (LanguageLvl)lvl;
-                                    <option value="@enumValue">@enumValue.GetEnumMemberValue()</option>
-                                }
-                            </select>
-                            <label for="language-level" class="form-label">Language Level</label>
-                            <ValidationMessage For="() => selectedLanguageLvl" class="text-danger" />
+                            <InputDate @bind-Value="ProfileInput.DateOfBirth" class="form-control" placeholder="Please enter your date of birth." />
+                            <label for="date-of-birth" class="form-label">Date of birth</label>
+                            <ValidationMessage For="() => ProfileInput.DateOfBirth" class="text-danger" />
                         </div>
-
+                        <div class="form-floating mb-3">
+                            <InputSelect @bind-Value="ProfileInput.Country" class="form-control">
+                                <option value="">Select your country</option>
+                                @foreach (var country in countries)
+                                {
+                                    <option value="@country">@country</option>
+                                }
+                            </InputSelect>
+                            <label for="country" class="form-label">Country</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputSelect @bind-Value="ProfileInput.Gender" class="form-control">
+                                <option value="">Select your gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </InputSelect>
+                            <label for="gender" class="form-label">Gender</label>
+                        </div>
                         <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
                     </EditForm>
                 </div>
             </div>
-        </p>
-    </ContentContent>
-    <ButtonTemplate>
-        <div class="d-flex justify-content-center align-content-center">
-            <button class="btn btn-danger btn-sm" @onclick="CloseLanguagesModal">Close</button>
-        </div>
-    </ButtonTemplate>
-</Modal>
 
-@* Модальное окно Password *@
-<button class="btn btn-info" @onclick="OpenPasswordModal">Manage password</button>
-<Modal BootstrapClass="border-success" 
-       CustomStyle="width:650px"
-       Open="IsPasswordModelOpen">
-
-    <ContentContent>
-        <p class="text-center text-muted">
-            <h3>Change password</h3>
-            <p>@passwordMessage</p>
+            <h3>Manage email</h3>
+            <p>@emailMessage</p>
             <div class="row">
                 <div class="col-md-6">
-                <EditForm Model="PasswordInput" FormName="change-password" OnValidSubmit="OnValidSubmitPasswordAsync">
+                    <EditForm Model="EmailInput" OnValidSubmit="OnValidSubmitEmailAsync">
                         <DataAnnotationsValidator />
                         <ValidationSummary class="text-danger" role="alert" />
-                        <div class="form-floating mb-3">
-                        <InputText type="password" @bind-Value="PasswordInput.OldPassword" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Please enter your old password." />
-                            <label for="old-password" class="form-label">Old password</label>
-                        <ValidationMessage For="() => PasswordInput.OldPassword" class="text-danger" />
+                        <div class="form-floating mb-3 input-group">
+                            <input type="text" value="@email" class="form-control" placeholder="Please enter your email." disabled />
+                            <div class="input-group-append">
+                                <span class="h-100 input-group-text text-success font-weight-bold">✓</span>
+                            </div>
+                            <label for="email" class="form-label">Email</label>
                         </div>
                         <div class="form-floating mb-3">
-                        <InputText type="password" @bind-Value="PasswordInput.NewPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Please enter your new password." />
-                            <label for="new-password" class="form-label">New password</label>
-                        <ValidationMessage For="() => PasswordInput.NewPassword" class="text-danger" />
+                            <InputText @bind-Value="EmailInput.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="Please enter new email." />
+                            <label for="new-email" class="form-label">New email</label>
+                            <ValidationMessage For="() => EmailInput.NewEmail" class="text-danger" />
                         </div>
-                        <div class="form-floating mb-3">
-                        <InputText type="password" @bind-Value="PasswordInput.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Please confirm your new password." />
-                            <label for="confirm-password" class="form-label">Confirm password</label>
-                        <ValidationMessage For="() => PasswordInput.ConfirmPassword" class="text-danger" />
-                        </div>
-                        <button type="submit" class="w-100 btn btn-lg btn-primary">Update password</button>
+                        <button type="submit" class="w-100 btn btn-lg btn-primary">Change email</button>
                     </EditForm>
                 </div>
             </div>
-        </p>
-    </ContentContent>
-    <ButtonTemplate>
-        <div class="d-flex justify-content-center align-content-center">
-            <button class="btn btn-danger btn-sm" @onclick="ClosePasswordModal">Close</button>
+
+            <button class="btn btn-info" @onclick="OpenLanguagesModal">Manage languages</button>
+            <Modal BootstrapClass="border-success" CustomStyle="width:40vw" Open="IsLanguagesModelOpen">
+                <ContentContent>
+                    <p class="text-center text-muted">
+                        <h3>Languages</h3>
+                        <StatusMessage />
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4>Your Languages</h4>
+                                @if (userLanguages.Count > 0)
+                                {
+                                    <ul class="list-group">
+                                        @foreach (var userLanguage in userLanguages)
+                                        {
+                                            <li @key="userLanguage.LanguageId" class="list-group-item d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>@userLanguage.Language.LanguageName</strong> - @userLanguage.LanguageLvl (@userLanguage.LanguageType)
+                                                </div>
+                                                <button class="btn btn-danger btn-sm" @onclick="() => DeleteUserLanguageAsync(userLanguage)">Delete</button>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <p>You haven't added any languages yet.</p>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <EditForm Model="LanguageInput" OnValidSubmit="OnValidSubmitLanguagesAsync">
+                                    <DataAnnotationsValidator />
+                                    <ValidationSummary class="text-danger" role="alert" />
+                                    <div class="form-floating mb-3">
+                                        <InputSelect @bind-Value="LanguageInput.LanguageType" class="form-control">
+                                            <option value="">Select language type</option>
+                                            <option value="Knows">Knows</option>
+                                            <option value="Wants to Learn">Wants to Learn</option>
+                                        </InputSelect>
+                                        <label for="language-type" class="form-label">Language Type</label>
+                                        <ValidationMessage For="() => LanguageInput.LanguageType" class="text-danger" />
+                                    </div>
+                                    <div class="form-floating mb-3">
+                                        <InputSelect @bind-Value="LanguageInput.LanguageId" class="form-control">
+                                            <option value="">Select a language</option>
+                                            @foreach (var language in languages)
+                                            {
+                                                <option value="@language.LanguageId">@language.LanguageName</option>
+                                            }
+                                        </InputSelect>
+                                        <label for="language" class="form-label">Language</label>
+                                        <ValidationMessage For="() => LanguageInput.LanguageId" class="text-danger" />
+                                    </div>
+                                    <div class="form-floating mb-3">
+                                        <select @bind="selectedLanguageLvl" placeholder="Please enter your language level.">
+                                            @foreach (var lvl in Enum.GetValues(typeof(LanguageLvl)))
+                                            {
+                                                var enumValue = (LanguageLvl)lvl;
+                                                <option value="@enumValue">@enumValue.GetEnumMemberValue()</option>
+                                            }
+                                        </select>
+                                        <label for="language-level" class="form-label">Language Level</label>
+                                        <ValidationMessage For="() => selectedLanguageLvl" class="text-danger" />
+                                    </div>
+
+                                    <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+                                </EditForm>
+                            </div>
+                        </div>
+                    </p>
+                </ContentContent>
+                <ButtonTemplate>
+                    <div class="modal-close-button">
+                        <button class="btn btn-danger btn-sm" @onclick="CloseLanguagesModal">Close</button>
+                    </div>
+                </ButtonTemplate>
+            </Modal>
+
+            <button class="btn btn-info" @onclick="OpenPasswordModal">Manage password</button>
+            <Modal BootstrapClass="border-success" CustomStyle="width:40vw" Open="IsPasswordModelOpen">
+                <ContentContent>
+                    <p class="text-center text-muted">
+                        <h3>Change password</h3>
+                        <p>@passwordMessage</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <EditForm Model="PasswordInput" FormName="change-password" OnValidSubmit="OnValidSubmitPasswordAsync">
+                                    <DataAnnotationsValidator />
+                                    <ValidationSummary class="text-danger" role="alert" />
+                                    <div class="form-floating mb-3">
+                                        <InputText type="password" @bind-Value="PasswordInput.OldPassword" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Please enter your old password." />
+                                        <label for="old-password" class="form-label">Old password</label>
+                                        <ValidationMessage For="() => PasswordInput.OldPassword" class="text-danger" />
+                                    </div>
+                                    <div class="form-floating mb-3">
+                                        <InputText type="password" @bind-Value="PasswordInput.NewPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Please enter your new password." />
+                                        <label for="new-password" class="form-label">New password</label>
+                                        <ValidationMessage For="() => PasswordInput.NewPassword" class="text-danger" />
+                                    </div>
+                                    <div class="form-floating mb-3">
+                                        <InputText type="password" @bind-Value="PasswordInput.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Please confirm your new password." />
+                                        <label for="confirm-password" class="form-label">Confirm password</label>
+                                        <ValidationMessage For="() => PasswordInput.ConfirmPassword" class="text-danger" />
+                                    </div>
+                                    <button type="submit" class="w-100 btn btn-lg btn-primary">Update password</button>
+                                </EditForm>
+                            </div>
+                        </div>
+                    </p>
+                </ContentContent>
+                <ButtonTemplate>
+                    <div class="modal-close-button">
+                        <button class="btn btn-danger btn-sm" @onclick="ClosePasswordModal">Close</button>
+                    </div>
+                </ButtonTemplate>
+            </Modal>
         </div>
-    </ButtonTemplate>
-</Modal>
+    </div>
+</div>
+
+
 
 @code {
     private ApplicationUser user = default!;
