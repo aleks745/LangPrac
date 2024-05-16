@@ -1,60 +1,104 @@
 ﻿@page "/"
 
-@inject IHttpContextAccessor HttpContextAccessor
-
-@* <PageTitle>Home</PageTitle>
-
-<h1>Hello!</h1>
-
-Welcome
-
-<button @onclick="ButtonClick">Click me!</button>
-@if (buttonClicked)
-{
-    <p>The button was clicked!</p>
-}
-
-@code {
-    private bool buttonClicked = false;
-
-    private void ButtonClick()
-    {
-        buttonClicked = true;
-    }
-} *@
-
-@using Microsoft.AspNetCore.Authorization
-@using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
 @using LangPrac.Data
 @using LangPrac.Components.Account
-
-@using Microsoft.AspNetCore.Components;
-
 @inject UserManager<ApplicationUser> UserManager
-@inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityUserAccessor UserAccessor
-@inject IdentityRedirectManager RedirectManager
+@inject IHttpContextAccessor HttpContextAccessor
 
-@attribute [Authorize]
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
 
-<PageTitle>Auth</PageTitle>
+<style>
+    body {
+        overflow-y: hidden;
+    }
 
-<h1>You are authenticated</h1>
+    .page {
+        background: url('searchbg.png') no-repeat center center fixed !important;
+        background-size: cover !important;
+        background-attachment: fixed !important;
+        min-height: 100vh !important;
+        width: 100vw !important;
+        font-size: 2.1vh;
+    }
 
-<AuthorizeView>
-    Hello @username <br />
-    Your phone number is @phoneNumber
-</AuthorizeView>
+    .hpage {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Roboto', sans-serif;
+        transform: scale(0.9);
+        transform-origin: center;
+    }
+
+    .container {
+        background-color: #53618B;
+        color: #ffffff;
+        border-radius: 1.3vh;
+        padding: 2vh 4vw;
+        min-width: 30vh;
+        text-align: center;
+        width: 80vw;
+        height: 78vh;
+    }
+
+    .step {
+        margin-bottom: 2vh;
+    }
+
+        .step h2 {
+            margin-bottom: 1vh;
+        }
+
+        .step p {
+            margin-bottom: 1.5vh;
+        }
+
+        .step a {
+            display: inline-block;
+            margin-top: 1vh;
+            padding: 1vh 2vh;
+            color: #ffffff;
+            background-color: #6a82fb;
+            text-decoration: none;
+            border-radius: 0.5vh;
+            transition: background-color 0.3s;
+        }
+
+            .step a:hover {
+                background-color: #4859a1;
+            }
+</style>
+
+<div class="hpage">
+    <div class="container">
+        <h1>Добро пожаловать в Language Practice</h1>
+        <div class="step">
+            <h2>Шаг 1: Настройте языки в профиле</h2>
+            <p style="font-size: 2.3vh">Для поиска партнеров выберите минимум один язык, который вы знаете, и минимум один язык, который хотите изучать.</p>
+            <a href="profile">Перейти в профиль</a>
+        </div>
+        <div class="step">
+            <h2>Шаг 2: Перейдите на страницу поиска</h2>
+            <p style="font-size: 2.3vh">После настройки языков перейдите на страницу поиска, чтобы найти подходящих партнеров по различным критериям и отправить им приглашение на языковую практику.</p>
+            <a href="search">Перейти к поиску</a>
+        </div>
+        <div class="step">
+            <h2>Шаг 3: Проверяйте страницу уведомлений</h2>
+            <p style="font-size: 2.3vh">Проверяйте уведомления, чтобы узнать, кто из партнеров принял ваше приглашение или пригласил вас на практику. После этого вы сможете начать общение в чате.</p>
+            <a href="notifications">Перейти к уведомлениям</a>
+        </div>
+    </div>
+</div>
 
 @code {
     private ApplicationUser user = default!;
     private string? username;
-    private string? phoneNumber;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
-
 
     protected override async Task OnInitializedAsync()
     {
@@ -62,8 +106,8 @@ Welcome
         {
             HttpContext = HttpContextAccessor.HttpContext;
         }
+
         user = await UserAccessor.GetRequiredUserAsync(HttpContext);
         username = await UserManager.GetUserNameAsync(user);
-        phoneNumber = await UserManager.GetPhoneNumberAsync(user);
     }
 }
