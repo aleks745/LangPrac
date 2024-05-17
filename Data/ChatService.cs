@@ -59,6 +59,20 @@ namespace LangPrac.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task CreateEndPracticeNotification(string senderId, string receiverId)
+        {
+            var notification = new Notification
+            {
+                SenderId = senderId,
+                ReceiverId = receiverId,
+                Message = "Ваш партнер инициировал завершение практики.",
+                HasPartnerInitiatedEnd = true
+            };
+
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task DeleteChatAsync(int chatId)
         {
             var chat = await _context.Chats.FindAsync(chatId);

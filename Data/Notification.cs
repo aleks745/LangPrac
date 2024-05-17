@@ -10,5 +10,6 @@
         public string Message { get; set; }
         public string Status { get; set; } = "Pending"; // Default status
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public bool HasPartnerInitiatedEnd { get; set; }
     }
 }

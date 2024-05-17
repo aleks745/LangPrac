@@ -208,6 +208,90 @@
         z-index: 2;
     }
 
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+        padding-top: 10vh;
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 1.5vh 1.5vw;
+        border: 1vh solid #888;
+        width: 34vw;
+        border-radius: 1.5vh;
+        box-shadow: 0 0.5vh 1vh rgba(0, 0, 0, 0.2);
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 2.5vh;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1vh;
+    }
+
+    .modal-title {
+        font-size: 2.5vh;
+    }
+
+    .modal-body {
+        font-size: 2vh;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .btn-upgrade,
+    .btn-delete {
+        padding: 1vh 2vw;
+        font-size: 2vh;
+        border-radius: 1vh;
+        cursor: pointer;
+        border: none;
+    }
+
+    .btn-upgrade {
+        background-color: #28a745;
+        color: white;
+    }
+
+        .btn-upgrade:hover {
+            background-color: #218838;
+        }
+
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+    }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+
     @@keyframes slideInFromRight {
         0% {
             transform: translateX(100%);
@@ -237,7 +321,7 @@
 <div class="chat-layout">
     <div class="chat-header">
         <span>@PartnerName</span> <!-- Используйте имя собеседника здесь -->
-        <button class="delete-chat-button" @onclick="DeleteChat">Delete Chat</button>
+        <button class="delete-chat-button" @onclick="ShowEndPracticeModal">Закончить практику</button>
     </div>
 
     <div class="chat-container" id="chatContainer">
@@ -308,6 +392,22 @@
                     <i class="fas fa-location-arrow"></i>
                 </span>
             </div>
+        </div>
+    </div>
+</div>
+
+<div id="endPracticeModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Завершение практики</h2>
+            <span class="close" @onclick="CloseEndPracticeModal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Вы хотите повысить уровень языка?</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-upgrade" @onclick="UpgradeLanguageLevel">Повысить уровень языка</button>
+            <button class="btn-delete" @onclick="ConfirmDeleteChat">Удалить чат</button>
         </div>
     </div>
 </div>
@@ -383,11 +483,40 @@
         await JSRuntime.InvokeVoidAsync("scrollToBottom", "chatContainer");
     }
 
+    private void ShowEndPracticeModal()
+    {
+        var modal = JSRuntime.InvokeVoidAsync("eval", "document.getElementById('endPracticeModal').style.display='block'");
+    }
+
+    private void CloseEndPracticeModal()
+    {
+        var modal = JSRuntime.InvokeVoidAsync("eval", "document.getElementById('endPracticeModal').style.display='none'");
+    }
+
+    private void UpgradeLanguageLevel()
+    {
+        NavigationManager.NavigateTo("/profile");
+    }
+
+    private async Task ConfirmDeleteChat()
+    {
+        await DeleteChat();
+    }
+
     private async Task DeleteChat()
     {
+        var chat = await ChatService.GetChatAsync(int.Parse(ChatId));
+        var partnerId = chat.User1Id == CurrentUserId ? chat.User2Id : chat.User1Id;
+
+        if (partnerId != null)
+        {
+            await ChatService.CreateEndPracticeNotification(CurrentUserId, partnerId);
+        }
+
         await ChatService.DeleteChatAsync(int.Parse(ChatId));
         NavigationManager.NavigateTo("/chats");
     }
+
 
     public async ValueTask DisposeAsync()
     {

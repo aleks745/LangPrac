@@ -104,7 +104,6 @@
 
         .notification .btn {
             margin-top: 1.04vh;
-            margin-right: 0.65vh;
             padding: 0.65vh 1.3vh;
             font-size: 2vh;
             border-radius: 0.52vh;
@@ -126,6 +125,77 @@
             border-color: #dc3545;
             background-color: #f9e6e6;
         }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: auto;
+        background-color: rgb(0, 0, 0);
+        background-color: rgba(0, 0, 0, 0.4);
+        padding-top: 5vh;
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5vh auto;
+        padding: 2vh 2vw;
+        border: 1vh solid #888;
+        width: 80vw;
+        border-radius: 2.22vh;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 2.2vh;
+        font-weight: bold;
+    }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+    .btn-upgrade,
+    .btn-delete {
+        padding: 0.65vh 1.3vh;
+        font-size: 2vh;
+        border-radius: 0.52vh;
+        cursor: pointer;
+        border: none;
+    }
+
+    .btn-upgrade {
+        background-color: #28a745;
+        color: white;
+        margin-right: 1vh;
+    }
+
+        .btn-upgrade:hover {
+            background-color: #218838;
+        }
+
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+    }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+
+    .btn-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 </style>
 
 @attribute [Authorize]
@@ -144,7 +214,14 @@
             <div class="notification" data-status="@notification.Status">
                 <p>@notification.Message</p>
                 <p class="timestamp">Sent: @notification.CreatedAt.ToLocalTime().ToString("g")</p>
-                @if (notification.Status == "Pending")
+                @if (notification.HasPartnerInitiatedEnd)
+                {
+                    <div class="btn-container">
+                        <button class="btn-upgrade" @onclick="UpgradeLanguageLevel">Повысить уровень языка</button>
+                        <button class="btn-delete" @onclick="() => RemoveNotification(notification.Id)">Удалить уведомление</button>
+                    </div>
+                }
+                else if (notification.Status == "Pending")
                 {
                     <button class="btn btn-success" @onclick="() => AcceptInvite(notification.Id)">Принять заявку</button>
                     <button class="btn btn-danger" @onclick="() => DeclineInvite(notification)">Отклонить заявку</button>
@@ -262,5 +339,21 @@
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
         StateHasChanged();
+    }
+
+    private void UpgradeLanguageLevel()
+    {
+        NavigationManager.NavigateTo("/profile");
+    }
+
+    private async Task RemoveNotification(int notificationId)
+    {
+        var notification = await DbContext.Notifications.FindAsync(notificationId);
+        if (notification != null)
+        {
+            DbContext.Notifications.Remove(notification);
+            await DbContext.SaveChangesAsync();
+            await LoadUserNotificationsAsync();
+        }
     }
 }
