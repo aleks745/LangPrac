@@ -27,7 +27,7 @@
                         <li class="nav-item">
                             <form action="Account/Logout" method="post">
                                 <AntiforgeryToken />
-                                <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                                <input type="hidden" name="ReturnUrl" value="Account/Login" />
                                 <button type="submit" class="nav-link-custom logout-button">Logout</button>
                             </form>
                         </li>
