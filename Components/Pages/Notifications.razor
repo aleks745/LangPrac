@@ -1,5 +1,6 @@
 ﻿@page "/notifications"
 
+@using LangPrac.Services
 @using Microsoft.AspNetCore.Authorization
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
@@ -7,6 +8,7 @@
 @using LangPrac.Components.Account
 @using Microsoft.EntityFrameworkCore
 
+@inject IChatService ChatService
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityUserAccessor UserAccessor
@@ -135,35 +137,43 @@
         width: 100vw;
         height: 100vh;
         overflow: auto;
-        background-color: rgb(0, 0, 0);
         background-color: rgba(0, 0, 0, 0.4);
-        padding-top: 5vh;
+        padding-top: 10vh;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1vh;
     }
 
     .modal-content {
         background-color: #fefefe;
-        margin: 5vh auto;
-        padding: 2vh 2vw;
+        margin: auto;
+        padding: 1.5vh 1.5vw;
         border: 1vh solid #888;
-        width: 80vw;
-        border-radius: 2.22vh;
+        width: 25vw;
+        border-radius: 1.5vh;
+        box-shadow: 0 0.5vh 1vh rgba(0, 0, 0, 0.2);
     }
 
     .close {
         color: #aaa;
         float: right;
-        font-size: 2.2vh;
+        font-size: 3vh;
         font-weight: bold;
+        cursor: pointer;
     }
 
         .close:hover,
         .close:focus {
             color: black;
             text-decoration: none;
-            cursor: pointer;
         }
 
     .btn-upgrade,
+    .btn-rate-partner,
     .btn-delete {
         padding: 0.65vh 1.3vh;
         font-size: 2vh;
@@ -196,6 +206,25 @@
         justify-content: center;
         align-items: center;
     }
+
+    .btn-rate-partner {
+        background-color: #b38600;
+        color: white;
+        margin-right: 1vh;
+    }
+
+        .btn-rate-partner:hover {
+            background-color: #8b6900;
+        }
+
+    .btn-rate-confirm {
+        background-color: #007bff;
+        color: white;
+    }
+
+        .btn-rate-confirm:hover {
+            background-color: #0056b3;
+        }
 </style>
 
 @attribute [Authorize]
@@ -218,6 +247,10 @@
                 {
                     <div class="btn-container">
                         <button class="btn-upgrade" @onclick="UpgradeLanguageLevel">Повысить уровень языка</button>
+                        @if (notification.HasPartnerInitiatedEnd && !notification.IsRated)
+                        {
+                            <button class="btn-rate-partner" @onclick="() => ShowRatePartnerModal(notification.SenderId, notification.Id)">Оценить партнера</button>
+                        }
                         <button class="btn-delete" @onclick="() => RemoveNotification(notification.Id)">Удалить уведомление</button>
                     </div>
                 }
@@ -235,10 +268,34 @@
     }
 </div>
 
+<div id="ratePartnerModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Оценка партнера</h2>
+            <span class="close" @onclick="CloseRatePartnerModal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Поставьте оценку вашему партнеру:</p>
+            <select @bind="SelectedRating">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <option value="@i">@i</option>
+                }
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-rate-confirm" @onclick="SubmitRating">Оценить</button>
+        </div>
+    </div>
+</div>
+
 @code {
     private ApplicationUser user = default!;
     private string? username;
     private List<Notification> NotificationList { get; set; } = new List<Notification>();
+    private int SelectedRating = 1;
+    private string CurrentPartnerId;
+    private HashSet<int> RatedNotifications = new HashSet<int>();
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -304,7 +361,7 @@
             .Where(n => n.ReceiverId == currentUserId)
             .ToListAsync();
 
-        if (notifications == null)
+        if (notifications == null || notifications.Count == 0)
         {
             Console.WriteLine("No notifications found for the current user.");
             return;
@@ -324,12 +381,20 @@
                     };
                 DbContext.Notifications.Add(declineNotification);
             }
-            DbContext.Notifications.Remove(notification);
+
+            if (!notification.HasPartnerInitiatedEnd)
+            {
+                DbContext.Notifications.Remove(notification);
+            }
         }
 
         await DbContext.SaveChangesAsync();
         await LoadUserNotificationsAsync();
+
+        // Clear the RatedNotifications set
+        RatedNotifications.Clear();
     }
+
 
     private async Task LoadUserNotificationsAsync()
     {
@@ -344,6 +409,32 @@
     private void UpgradeLanguageLevel()
     {
         NavigationManager.NavigateTo("/profile");
+    }
+
+    private int CurrentNotificationId;
+    private void ShowRatePartnerModal(string partnerId, int notificationId)
+    {
+        CurrentPartnerId = partnerId;
+        CurrentNotificationId = notificationId; // Сохраняем идентификатор текущего уведомления
+        var modal = JSRuntime.InvokeVoidAsync("eval", "document.getElementById('ratePartnerModal').style.display='block'");
+    }
+
+
+    private void CloseRatePartnerModal()
+    {
+        var modal = JSRuntime.InvokeVoidAsync("eval", "document.getElementById('ratePartnerModal').style.display='none'");
+    }
+
+    private async Task SubmitRating()
+    {
+        await ChatService.RatePartnerAsync(CurrentPartnerId, SelectedRating, CurrentNotificationId);
+        var notification = NotificationList.FirstOrDefault(n => n.Id == CurrentNotificationId);
+        if (notification != null)
+        {
+            notification.IsRated = true;
+        }
+        StateHasChanged();
+        CloseRatePartnerModal();
     }
 
     private async Task RemoveNotification(int notificationId)

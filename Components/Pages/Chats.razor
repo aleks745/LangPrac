@@ -112,6 +112,109 @@
         font-size: 1.8vh;
         color: #cccccc;
     }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+        padding-top: 10vh;
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 1.5vh 1.5vw;
+        border: 1vh solid #888;
+        width: 34vw;
+        border-radius: 1.5vh;
+        box-shadow: 0 0.5vh 1vh rgba(0, 0, 0, 0.2);
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 2.5vh;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1vh;
+    }
+
+    .modal-title {
+        font-size: 2.5vh;
+    }
+
+    .modal-body {
+        font-size: 2vh;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .btn-upgrade,
+    .btn-rate,
+    .btn-delete {
+        padding: 1vh 2vw;
+        font-size: 2vh;
+        border-radius: 1vh;
+        cursor: pointer;
+        border: none;
+    }
+
+    .btn-upgrade {
+        background-color: #28a745;
+        color: white;
+    }
+
+        .btn-upgrade:hover {
+            background-color: #218838;
+        }
+
+    .btn-rate {
+        background-color: #b38600;
+        color: white;
+    }
+
+        .btn-rate:hover {
+            background-color: #8b6900;
+        }
+
+    .btn-rate-confirm {
+        background-color: #007bff;
+        color: white;
+    }
+
+        .btn-rate-confirm:hover {
+            background-color: #0056b3;
+        }
+
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+    }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
 </style>
 
 <div class="chat-list-layout">
@@ -128,15 +231,66 @@
                         <span style="font-size: 1.5vh">Created: @chat.CreatedDate.ToString("dd.MM.yyyy")</span>
                     </div>
                 </div>
-                <button class="delete-chat-button" @onclick:stopPropagation @onclick="@((e) => DeleteChat(e, chat.Id))">Delete</button>
+                <button class="delete-chat-button" @onclick:stopPropagation @onclick="() => ShowEndPracticeModal(chat.Id)">Закончить практику</button>
             </div>
         }
+    </div>
+</div>
+
+<div id="endPracticeModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Завершение практики</h2>
+            <span class="close" @onclick="CloseEndPracticeModal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Вы хотите повысить уровень языка?</p>
+            <p>После оценки партнера чат будет автоматически удален.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-upgrade" @onclick="UpgradeLanguageLevel">Повысить уровень языка</button>
+            @if (IsPartnerRated)
+            {
+                <span>Вы оценили партнера</span>
+            }
+            else
+            {
+                <button class="btn-rate" @onclick="ShowRatePartnerModal">Оценить партнера</button>
+            }
+            <button class="btn-delete" @onclick="ConfirmDeleteChat">Удалить чат</button>
+        </div>
+    </div>
+</div>
+
+<div id="ratePartnerModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Оценка партнера</h2>
+            <span class="close" @onclick="CloseRatePartnerModal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Поставьте оценку вашему партнеру:</p>
+            <select @bind="SelectedRating">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <option value="@i">@i</option>
+                }
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-rate-confirm" @onclick="SubmitRating">Оценить</button>
+        </div>
     </div>
 </div>
 
 @code {
     private List<Chat> UserChats = new List<Chat>();
     private string CurrentUserId;
+    private int ChatIdToDelete;
+
+    private bool IsRatePartnerModalOpen = false;
+    private bool IsPartnerRated = false;
+    private int SelectedRating = 1;
 
     protected override async Task OnInitializedAsync()
     {
@@ -169,10 +323,63 @@
         NavigationManager.NavigateTo($"/chat/{chatId}");
     }
 
-    private async Task DeleteChat(MouseEventArgs e, int chatId)
+    private void ShowEndPracticeModal(int chatId)
     {
+        ChatIdToDelete = chatId;
+        JSRuntime.InvokeVoidAsync("eval", "document.getElementById('endPracticeModal').style.display='block'");
+    }
+
+    private void CloseEndPracticeModal()
+    {
+        JSRuntime.InvokeVoidAsync("eval", "document.getElementById('endPracticeModal').style.display='none'");
+    }
+
+    private void ShowRatePartnerModal()
+    {
+        IsRatePartnerModalOpen = true;
+        JSRuntime.InvokeVoidAsync("eval", "document.getElementById('ratePartnerModal').style.display='block'");
+    }
+
+    private void CloseRatePartnerModal()
+    {
+        IsRatePartnerModalOpen = false;
+        JSRuntime.InvokeVoidAsync("eval", "document.getElementById('ratePartnerModal').style.display='none'");
+    }
+
+    private async Task SubmitRating()
+    {
+        var chat = await ChatService.GetChatAsync(ChatIdToDelete);
+        var partnerId = chat.User1Id == CurrentUserId ? chat.User2Id : chat.User1Id;
+        await ChatService.RatePartnerAsync(partnerId, SelectedRating, 0);
+        IsPartnerRated = true;
+        CloseRatePartnerModal();
+        await DeleteChat(ChatIdToDelete);
+    }
+
+
+    private void UpgradeLanguageLevel()
+    {
+        NavigationManager.NavigateTo("/profile");
+    }
+
+    private async Task ConfirmDeleteChat()
+    {
+        await DeleteChat(ChatIdToDelete);
+    }
+
+    private async Task DeleteChat(int chatId)
+    {
+        var chat = await ChatService.GetChatAsync(chatId);
+        var partnerId = chat.User1Id == CurrentUserId ? chat.User2Id : chat.User1Id;
+
+        if (partnerId != null)
+        {
+            await ChatService.CreateEndPracticeNotification(CurrentUserId, partnerId);
+        }
+
         await ChatService.DeleteChatAsync(chatId);
         UserChats = await ChatService.GetUserChatsAsync(CurrentUserId);
+        CloseEndPracticeModal();
         StateHasChanged();
     }
 }

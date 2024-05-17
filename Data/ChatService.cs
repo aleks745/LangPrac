@@ -59,13 +59,45 @@ namespace LangPrac.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task RatePartnerAsync(string partnerId, int rating, int notificationId)
+        {
+            var user = await _context.Users.FindAsync(partnerId);
+            if (user != null)
+            {
+                var ratingEntry = new PartnerRating
+                {
+                    UserId = partnerId,
+                    Rating = rating
+                };
+
+                _context.PartnerRatings.Add(ratingEntry);
+
+                // Обновляем уведомление
+                var notification = await _context.Notifications.FindAsync(notificationId);
+                if (notification != null)
+                {
+                    notification.IsRated = true;
+                }
+
+                await _context.SaveChangesAsync();
+            }
+        }
+
+
+
         public async Task CreateEndPracticeNotification(string senderId, string receiverId)
         {
+            var sender = await _context.Users.FindAsync(senderId);
+            if (sender == null)
+            {
+                throw new ArgumentException("Sender not found");
+            }
+
             var notification = new Notification
             {
                 SenderId = senderId,
                 ReceiverId = receiverId,
-                Message = "Ваш партнер инициировал завершение практики.",
+                Message = $"Ваш партнер {sender.Nickname ?? sender.UserName} инициировал завершение практики.",
                 HasPartnerInitiatedEnd = true
             };
 

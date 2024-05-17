@@ -13,6 +13,7 @@ namespace LangPrac.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Chat> Chats { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<PartnerRating> PartnerRatings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -42,6 +43,7 @@ namespace LangPrac.Data
                 .WithMany()
                 .HasForeignKey(n => n.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
+
 
             // ќдин чат св€зан с одним пользователем (User1)
             // ѕользователь(User1) может иметь множество чатов
@@ -79,6 +81,11 @@ namespace LangPrac.Data
                 .HasOne(m => m.Sender)
                 .WithMany()
                 .HasForeignKey(m => m.SenderId);
+
+            modelBuilder.Entity<PartnerRating>()
+                .HasOne(pr => pr.User)
+                .WithMany(u => u.UserRatings)
+                .HasForeignKey(pr => pr.UserId);
         }
     }
 }

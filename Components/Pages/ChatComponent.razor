@@ -266,6 +266,7 @@
     }
 
     .btn-upgrade,
+    .btn-rate,
     .btn-delete {
         padding: 1vh 2vw;
         font-size: 2vh;
@@ -291,6 +292,25 @@
         .btn-delete:hover {
             background-color: #c82333;
         }
+
+    .btn-rate {
+        background-color: #b38600;
+        color: white;
+    }
+
+    .btn-rate:hover {
+            background-color: #8b6900;
+    }
+
+    .btn-rate-confirm {
+        background-color: #007bff;
+        color: white;
+    }
+
+        .btn-rate-confirm:hover {
+            background-color: #0056b3;
+        }
+
 
     @@keyframes slideInFromRight {
         0% {
@@ -404,10 +424,40 @@
         </div>
         <div class="modal-body">
             <p>Вы хотите повысить уровень языка?</p>
+            <p>После оценки партнера чат будет автоматически удален.</p>
         </div>
         <div class="modal-footer">
             <button class="btn-upgrade" @onclick="UpgradeLanguageLevel">Повысить уровень языка</button>
+            @if (IsPartnerRated)
+            {
+                <span>Вы оценили партнера</span>
+            }
+            else
+            {
+                <button class="btn-rate" @onclick="ShowRatePartnerModal">Оценить партнера</button>
+            }
             <button class="btn-delete" @onclick="ConfirmDeleteChat">Удалить чат</button>
+        </div>
+    </div>
+</div>
+
+<div id="ratePartnerModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Оценка партнера</h2>
+            <span class="close" @onclick="CloseRatePartnerModal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Поставьте оценку вашему партнеру:</p>
+            <select @bind="SelectedRating">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <option value="@i">@i</option>
+                }
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-rate-confirm" @onclick="SubmitRating">Оценить</button>
         </div>
     </div>
 </div>
@@ -420,6 +470,10 @@
     private string NewMessage = string.Empty;
     private string CurrentUserId;
     private string PartnerName;
+
+    private bool IsRatePartnerModalOpen = false;
+    private bool IsPartnerRated = false;
+    private int SelectedRating = 1;
 
     protected override async Task OnInitializedAsync()
     {
@@ -498,6 +552,29 @@
         NavigationManager.NavigateTo("/profile");
     }
 
+    // Методы для открытия и закрытия модального окна
+    private void ShowRatePartnerModal()
+    {
+        IsRatePartnerModalOpen = true;
+        var modal = JSRuntime.InvokeVoidAsync("eval", "document.getElementById('ratePartnerModal').style.display='block'");
+    }
+
+    private void CloseRatePartnerModal()
+    {
+        IsRatePartnerModalOpen = false;
+        var modal = JSRuntime.InvokeVoidAsync("eval", "document.getElementById('ratePartnerModal').style.display='none'");
+    }
+
+    private async Task SubmitRating()
+    {
+        var chat = await ChatService.GetChatAsync(int.Parse(ChatId));
+        var partnerId = chat.User1Id == CurrentUserId ? chat.User2Id : chat.User1Id;
+        await ChatService.RatePartnerAsync(partnerId, SelectedRating, 0); // Передаем 0, если нет уведомления
+        IsPartnerRated = true;
+        CloseRatePartnerModal();
+        await DeleteChat();
+    }
+
     private async Task ConfirmDeleteChat()
     {
         await DeleteChat();
@@ -516,7 +593,6 @@
         await ChatService.DeleteChatAsync(int.Parse(ChatId));
         NavigationManager.NavigateTo("/chats");
     }
-
 
     public async ValueTask DisposeAsync()
     {

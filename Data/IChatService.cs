@@ -7,6 +7,7 @@
         Task<Chat> CreateChatAsync(string user1Id, string user2Id);
         Task SendMessageAsync(int chatId, string senderId, string content);
         Task CreateEndPracticeNotification(string senderId, string receiverId);
+        Task RatePartnerAsync(string partnerId, int rating, int notificationId);
         Task DeleteChatAsync(int chatId);
     }
 }

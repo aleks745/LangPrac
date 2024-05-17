@@ -174,28 +174,60 @@
         margin-bottom: 1vh;
     }
 
+    .rating {
+        margin-top: 1vh;
+        font-size: 2vh;
+        color: #f39c12;
+    }
+
+        .rating h5 {
+            margin-top: 0.5vh;
+            color: #555;
+            font-size: 2vh;
+        }
+
 </style>
 
 <PageTitle>Profile Management</PageTitle>
 
 <div class="ppage">
     <div class="content-container">
-        <div class="elements">
-            <div class="row">
-                <div class="avatar-container">
-                    @if (user is not null && user.AvatarImage is not null)
-                    {
-                        <img src="@($"data:image/jpeg;base64,{Convert.ToBase64String(user.AvatarImage)}")" alt="Avatar" class="avatar-image" />
-                    }
-                    else
-                    {
-                        <div class="avatar-placeholder">
-                            <span>Upload Avatar</span>
-                        </div>
-                    }
-                    <InputFile OnChange="@LoadAvatar" accept="image/*" class="avatar-input" />
+        @if (user != null)
+        {
+            <div class="elements">
+                <div class="row">
+                    <h4>@user.Nickname</h4>
+                    <div class="avatar-container">
+                        @if (user.AvatarImage is not null)
+                        {
+                            <img src="@($"data:image/jpeg;base64,{Convert.ToBase64String(user.AvatarImage)}")" alt="Avatar" class="avatar-image" />
+                        }
+                        else
+                        {
+                            <div class="avatar-placeholder">
+                                <span>Upload Avatar</span>
+                            </div>
+                        }
+                        <InputFile OnChange="@LoadAvatar" accept="image/*" class="avatar-input" />
+                    </div>
+                    <div class="rating">
+                        @if (user.AverageRating == 0)
+                        {
+                            <h5>Пользователя еще никто не оценил</h5>
+                        }
+                        else
+                        {
+                            <h5>Рейтинг: @user.AverageRating</h5>
+                            <h5>Количество оценок: @user.UserRatings.Count</h5>
+                        }
+                    </div>
                 </div>
             </div>
+        }
+        else
+        {
+            <p>Пользователь не найден.</p>
+        }
 
             <div class="languages-container">
                 <h3>Your Languages</h3>
@@ -370,7 +402,6 @@
                     </div>
                 </ButtonTemplate>
             </Modal>
-        </div>
     </div>
 </div>
 
@@ -415,6 +446,12 @@
         ProfileInput.Country ??= user.Country;
         ProfileInput.Gender ??= user.Gender;
         EmailInput.NewEmail ??= email;
+
+        user.UserRatings = await DbContext.PartnerRatings
+            .Where(r => r.UserId == user.Id)
+            .ToListAsync();
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnValidSubmitProfileAsync()

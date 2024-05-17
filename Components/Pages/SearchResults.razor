@@ -10,6 +10,11 @@
 @inject IHttpContextAccessor HttpContextAccessor
 
 <style>
+    body {
+        overflow-x: hidden;
+        overflow-y: hidden;
+    }
+
     .page {
         background: url('searchbg.png') no-repeat center center fixed !important;
         background-size: cover !important;
@@ -158,6 +163,15 @@
         animation: spin 2s linear infinite;
     }
 
+    .rating-info {
+        margin-top: 1.3vh;
+        font-size: 1.9vh;
+        color: #ffd700;
+    }
+
+        .rating-info .count {
+            color: #ffffff;
+        }
 
 /* Safari */
 @@-webkit-keyframes spin {
@@ -222,6 +236,18 @@
                         }
                     }
                 </div>
+                <div class="rating-info">
+                    <strong>Рейтинг: </strong>
+                    @if (CurrentUser.HasRatings)
+                    {
+                        <span>@CurrentUser.AverageRating</span> <br />
+                        <span class="count">Количество оценок: @CurrentUser.RatingCount</span>
+                    }
+                    else
+                    {
+                        <span>Нет оценок</span>
+                    }
+                </div>
                 @if (invitationSent.ContainsKey(CurrentUser?.Id) && invitationSent[CurrentUser.Id])
                 {
                     <span class="invitation-sent">Invitation sent!</span>
@@ -270,6 +296,7 @@
         Users = await DbContext.Users
             .Where(u => userIdList.Contains(u.Id) && u.Id != UserManager.GetUserId(HttpContext.User))
             .Include(u => u.UserLanguages)
+            .Include(u => u.UserRatings)
             .ToListAsync();
 
         if (Users.Any())
@@ -284,7 +311,6 @@
         }
         UpdateState();
     }
-
 
     private void GoBack()
     {
