@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 
+@inject IChatService chatService
 @inject UserManager<ApplicationUser> UserManager
 @inject NavigationManager NavigationManager
 @inject ApplicationDbContext DbContext
@@ -248,13 +249,18 @@
                         <span>Нет оценок</span>
                     }
                 </div>
-                @if (invitationSent.ContainsKey(CurrentUser?.Id) && invitationSent[CurrentUser.Id])
+                @if (UserChats.Any(c => (c.User1Id == CurrentUser.Id && c.User2Id == UserManager.GetUserId(HttpContext.User)) ||
+               (c.User2Id == CurrentUser.Id && c.User1Id == UserManager.GetUserId(HttpContext.User))))
                 {
-                    <span class="invitation-sent">Invitation sent!</span>
+                    <span>Чат с этим пользователем уже существует</span>
+                }
+                else if (invitationSent.ContainsKey(CurrentUser?.Id) && invitationSent[CurrentUser.Id])
+                {
+                    <span class="invitation-sent">Invite Send</span>
                 }
                 else
                 {
-                    <button class="btn-invite" @onclick="() => SendInvite(CurrentUser)">Invite</button>
+                    <button class="btn-invite" @onclick="() => SendInvite(CurrentUser)">Пригласить</button>
                 }
             </div>
         </div>
@@ -273,6 +279,7 @@
     private HttpContext HttpContext { get; set; } = default!;
 
     private List<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
+    private List<Chat> UserChats = new List<Chat>();
     private Dictionary<string, bool> invitationSent = new Dictionary<string, bool>();
 
     private ApplicationUser CurrentUser;
@@ -286,6 +293,9 @@
         {
             HttpContext = HttpContextAccessor.HttpContext;
         }
+
+        var chatService = HttpContext.RequestServices.GetRequiredService<IChatService>();
+        UserChats = await chatService.GetUserChatsAsync(UserManager.GetUserId(HttpContext.User));
 
         var userIdList = UserIds.Split(',').ToList();
         isLoading = true;
@@ -362,26 +372,10 @@
     {
         if (!invitationSent.ContainsKey(user.Id) || !invitationSent[user.Id])
         {
-            var notificationForReceiver = new Notification
-                {
-                    SenderId = UserManager.GetUserId(HttpContext.User),
-                    ReceiverId = user.Id,
-                    Message = $"You have been invited by {UserManager.GetUserName(HttpContext.User)} to join a chat."
-                };
+            var currentUser = await UserManager.GetUserAsync(HttpContext.User);
+            await chatService.SendInviteWithDetails(currentUser, user);
 
-            var notificationForSender = new Notification
-                {
-                    SenderId = UserManager.GetUserId(HttpContext.User),
-                    ReceiverId = UserManager.GetUserId(HttpContext.User),
-                    Message = $"Your invitation to {user.UserName} has been sent.",
-                    Status = "Sent"
-                };
-
-            DbContext.Notifications.AddRange(notificationForReceiver, notificationForSender);
-            await DbContext.SaveChangesAsync();
-
-            invitationSent[user.Id] = true;  // Mark the invitation as sent.
+            invitationSent[user.Id] = true;
         }
     }
-
 }

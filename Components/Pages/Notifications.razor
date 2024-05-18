@@ -243,6 +243,14 @@
             <div class="notification" data-status="@notification.Status">
                 <p>@notification.Message</p>
                 <p class="timestamp">Sent: @notification.CreatedAt.ToLocalTime().ToString("g")</p>
+                @if (!string.IsNullOrEmpty(notification.UserLanguagesInfo))
+                {
+                    <p>@notification.UserLanguagesInfo</p>
+                }
+                @if (!string.IsNullOrEmpty(notification.UserInfo))
+                {
+                    <p>@notification.UserInfo</p>
+                }
                 @if (notification.HasPartnerInitiatedEnd)
                 {
                     <div class="btn-container">
@@ -267,6 +275,7 @@
         <p>No notifications to display.</p>
     }
 </div>
+
 
 <div id="ratePartnerModal" class="modal">
     <div class="modal-content">
@@ -321,9 +330,11 @@
         {
             var chatService = HttpContext.RequestServices.GetRequiredService<IChatService>();
             var chat = await chatService.CreateChatAsync(notification.SenderId, notification.ReceiverId);
-
             notification.Status = "Accepted";
+
             await DbContext.SaveChangesAsync();
+
+            await chatService.CreateChatConfirmationNotification(notification.ReceiverId, notification.SenderId);
 
             NavigationManager.NavigateTo($"/chat/{chat.Id}");
         }
@@ -377,7 +388,8 @@
                         SenderId = notification.ReceiverId,
                         ReceiverId = notification.SenderId,
                         Message = $"Your invitation to {UserManager.FindByIdAsync(notification.ReceiverId).Result.UserName} has been declined.",
-                        Status = "Declined"
+                        Status = "Declined",
+                        UserInfo = string.Empty // Ensure UserInfo is not null
                     };
                 DbContext.Notifications.Add(declineNotification);
             }
@@ -391,10 +403,8 @@
         await DbContext.SaveChangesAsync();
         await LoadUserNotificationsAsync();
 
-        // Clear the RatedNotifications set
         RatedNotifications.Clear();
     }
-
 
     private async Task LoadUserNotificationsAsync()
     {
@@ -418,7 +428,6 @@
         CurrentNotificationId = notificationId; // Сохраняем идентификатор текущего уведомления
         var modal = JSRuntime.InvokeVoidAsync("eval", "document.getElementById('ratePartnerModal').style.display='block'");
     }
-
 
     private void CloseRatePartnerModal()
     {

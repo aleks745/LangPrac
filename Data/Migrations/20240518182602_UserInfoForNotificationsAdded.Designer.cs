@@ -4,6 +4,7 @@ using LangPrac.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LangPrac.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240518182602_UserInfoForNotificationsAdded")]
+    partial class UserInfoForNotificationsAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -129,7 +132,7 @@ namespace LangPrac.Migrations
 
                     b.HasIndex("User2Id");
 
-                    b.ToTable("Chats", (string)null);
+                    b.ToTable("Chats");
                 });
 
             modelBuilder.Entity("LangPrac.Data.ChatMessage", b =>
@@ -160,7 +163,7 @@ namespace LangPrac.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("ChatMessages", (string)null);
+                    b.ToTable("ChatMessages");
                 });
 
             modelBuilder.Entity("LangPrac.Data.Language", b =>
@@ -176,7 +179,7 @@ namespace LangPrac.Migrations
 
                     b.HasKey("LanguageId");
 
-                    b.ToTable("Languages", (string)null);
+                    b.ToTable("Languages");
                 });
 
             modelBuilder.Entity("LangPrac.Data.Notification", b =>
@@ -226,7 +229,7 @@ namespace LangPrac.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("LangPrac.Data.PartnerRating", b =>
@@ -248,7 +251,7 @@ namespace LangPrac.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PartnerRatings", (string)null);
+                    b.ToTable("PartnerRatings");
                 });
 
             modelBuilder.Entity("LangPrac.Data.UserLanguage", b =>
@@ -270,7 +273,7 @@ namespace LangPrac.Migrations
 
                     b.HasIndex("LanguageId");
 
-                    b.ToTable("UserLanguages", (string)null);
+                    b.ToTable("UserLanguages");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
