@@ -339,6 +339,12 @@
             .Select(ul => ul.LanguageId)
             .ToList();
 
+        if (!knownLanguages.Any() || !wantsToLearnLanguages.Any())
+        {
+            searchMessage = "Пожалуйста, добавьте языки, которые вы знаете, и языки, которые хотите изучать.";
+            return;
+        }
+
         var searchResults = await DbContext.Users
             .Where(u => u.Id != user.Id)
             .Where(u => u.UserLanguages.Any(ul =>
@@ -360,15 +366,29 @@
 
     private async Task AdvancedSearchAsync()
     {
+        var knownLanguages = userLanguages
+            .Where(ul => ul.LanguageType == "Knows")
+            .Select(ul => ul.LanguageId)
+            .ToList();
+
+        var wantsToLearnLanguages = userLanguages
+            .Where(ul => ul.LanguageType == "Wants to Learn")
+            .Select(ul => ul.LanguageId)
+            .ToList();
+
+        if (!knownLanguages.Any() || !wantsToLearnLanguages.Any())
+        {
+            searchMessage = "Пожалуйста, добавьте языки, которые вы знаете, и языки, которые хотите изучать.";
+            return;
+        }
+
         var today = DateOnly.FromDateTime(DateTime.Today);
 
-        // Получаем всех пользователей, кроме текущего
         var allUsers = await DbContext.Users
             .Include(u => u.UserLanguages)
             .Where(u => u.Id != user.Id)
             .ToListAsync();
 
-        // Фильтруем пользователей по языковым навыкам (знает нужный язык)
         var filteredUsers = allUsers
             .Where(u => u.UserLanguages.Any(ul => ul.LanguageId == selectedLanguageId &&
                                                   ul.LanguageType == "Knows" &&
@@ -376,13 +396,11 @@
                                                   ul.LanguageLvl <= partnerLanguageLevelTo))
             .ToList();
 
-        // Получаем языки, которые знает текущий пользователь
         var userKnowsLanguages = user.UserLanguages
             .Where(ul => ul.LanguageType == "Knows")
             .Select(ul => ul.LanguageId)
             .ToList();
 
-        // Создаем временный список для проверки пользователей на второй фильтрации
         var tempFilteredUsers = new List<ApplicationUser>();
 
         foreach (var u in filteredUsers)
@@ -392,7 +410,6 @@
                 .Select(ul => ul.LanguageId)
                 .ToList();
 
-            // Проверка, хотят ли пользователи учить языки, которые знает текущий пользователь
             if (userWantsToLearn.Intersect(userKnowsLanguages).Any())
             {
                 tempFilteredUsers.Add(u);
@@ -409,7 +426,6 @@
                                          .ToList();
         }
 
-        // Фильтрация по полу
         if (!string.IsNullOrEmpty(selectedGender) && selectedGender != "Any")
         {
             filteredUsers = filteredUsers.Where(u => u.Gender == selectedGender).ToList();
