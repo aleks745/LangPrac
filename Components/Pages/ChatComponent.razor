@@ -311,6 +311,30 @@
             background-color: #0056b3;
         }
 
+    .type_msg::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .type_msg::-webkit-scrollbar-track {
+        background: #53618b;
+        border-radius: 4px;
+    }
+
+    .type_msg::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+        .type_msg::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+    .read-indicator {
+        font-style: italic;
+        color: rgba(0, 0, 0, 0.5);
+        font-size: 1.5vh;
+        margin-top: 0.5vh;
+    }
 
     @@keyframes slideInFromRight {
         0% {
@@ -399,6 +423,10 @@
                                 }
                             </span>
                         }
+                        @if (message.SenderId == CurrentUserId && message.IsRead)
+                        {
+                            <span class="read-indicator">Прочитано</span>
+                        }
                     </div>
                 </div>
             </div>
@@ -406,7 +434,7 @@
     </div>
     <div class="card-footer">
         <div class="input-group">
-            <textarea name="" class="form-control type_msg" placeholder="Type your message..." type="text" @bind="NewMessage"></textarea>
+            <textarea name="" class="form-control type_msg" placeholder="Type your message..." @bind="NewMessage"></textarea>
             <div class="input-group-append">
                 <span class="input-group-text send_btn" @onclick="SendMessage">
                     <i class="fas fa-location-arrow"></i>
@@ -470,6 +498,7 @@
     private string NewMessage = string.Empty;
     private string CurrentUserId;
     private string PartnerName;
+    private string PartnerId;
 
     private bool IsRatePartnerModalOpen = false;
     private bool IsPartnerRated = false;
@@ -490,12 +519,12 @@
             {
                 var sender = await UserManager.FindByIdAsync(userId);
                 var msg = new ChatMessage
-                {
-                    SenderId = userId,
-                    Content = message,
-                    Timestamp = DateTime.UtcNow,
-                    Sender = sender
-                };
+                    {
+                        SenderId = userId,
+                        Content = message,
+                        Timestamp = DateTime.UtcNow,
+                        Sender = sender
+                    };
 
                 await InvokeAsync(() =>
                 {
@@ -504,17 +533,37 @@
                 });
 
                 await JSRuntime.InvokeVoidAsync("scrollToBottom");
+
+                if (userId != CurrentUserId)
+                {
+                    await hubConnection.InvokeAsync("MarkMessageAsRead", int.Parse(ChatId), userId);
+                }
+            });
+
+            hubConnection.On<string>("MessagesRead", async userId =>
+            {
+                await InvokeAsync(() =>
+                {
+                    foreach (var message in Messages.Where(m => m.SenderId != userId))
+                    {
+                        message.IsRead = true;
+                    }
+                    StateHasChanged();
+                });
             });
 
             await hubConnection.StartAsync();
             await hubConnection.InvokeAsync("JoinChat", int.Parse(ChatId));
 
-            var chat = await ChatService.GetChatAsync(int.Parse(ChatId));
+            var chat = await ChatService.GetChatAsync(int.Parse(ChatId), CurrentUserId);
             Messages = chat.Messages.ToList();
 
             var partner = chat.User1Id == CurrentUserId ? chat.User2 : chat.User1;
             PartnerName = partner?.Nickname ?? "Chat";
+            PartnerId = partner?.Id;
+
             StateHasChanged();
+            await hubConnection.InvokeAsync("MarkMessageAsRead", int.Parse(ChatId), CurrentUserId);
         }
         else
         {
@@ -528,7 +577,7 @@
         {
             await hubConnection.InvokeAsync("SendMessage", int.Parse(ChatId), CurrentUserId, NewMessage);
             NewMessage = string.Empty;
-            await ScrollToBottom(); // Вызов прокрутки после отправки сообщения
+            await ScrollToBottom();
         }
     }
 
@@ -567,7 +616,7 @@
 
     private async Task SubmitRating()
     {
-        var chat = await ChatService.GetChatAsync(int.Parse(ChatId));
+        var chat = await ChatService.GetChatAsync(int.Parse(ChatId), CurrentUserId);
         var partnerId = chat.User1Id == CurrentUserId ? chat.User2Id : chat.User1Id;
         await ChatService.RatePartnerAsync(partnerId, SelectedRating, 0); // Передаем 0, если нет уведомления
         IsPartnerRated = true;
@@ -582,7 +631,7 @@
 
     private async Task DeleteChat()
     {
-        var chat = await ChatService.GetChatAsync(int.Parse(ChatId));
+        var chat = await ChatService.GetChatAsync(int.Parse(ChatId), CurrentUserId);
         var partnerId = chat.User1Id == CurrentUserId ? chat.User2Id : chat.User1Id;
 
         if (partnerId != null)

@@ -12,12 +12,19 @@ namespace LangPrac.Services
             _context = context;
         }
 
-        public async Task<Chat> GetChatAsync(int chatId)
+        public async Task<Chat> GetChatAsync(int chatId, string userId)
         {
-            return await _context.Chats
+            var chat = await _context.Chats
                 .Include(c => c.Messages)
-                    .ThenInclude(m => m.Sender)
-                .FirstOrDefaultAsync(c => c.Id == chatId);
+                .ThenInclude(m => m.Sender)
+                .FirstOrDefaultAsync(c => c.Id == chatId && (c.User1Id == userId || c.User2Id == userId));
+
+            if (chat == null)
+            {
+                throw new UnauthorizedAccessException("У вас немає доступу до цього чату.");
+            }
+
+            return chat;
         }
 
         public async Task<List<Chat>> GetUserChatsAsync(string userId)
@@ -156,6 +163,20 @@ namespace LangPrac.Services
             return age;
         }
 
+        public async Task MarkMessagesAsReadAsync(int chatId, string userId)
+        {
+            var messages = await _context.ChatMessages
+                .Where(m => m.ChatId == chatId && m.SenderId != userId && !m.IsRead)
+                .ToListAsync();
+
+            foreach (var message in messages)
+            {
+                message.IsRead = true;
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
         public async Task CreateEndPracticeNotification(string senderId, string receiverId)
         {
             var sender = await _context.Users.FindAsync(senderId);
@@ -176,7 +197,6 @@ namespace LangPrac.Services
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
         }
-
 
         public async Task DeleteChatAsync(int chatId)
         {

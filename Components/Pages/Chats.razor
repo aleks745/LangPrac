@@ -348,7 +348,7 @@
 
     private async Task SubmitRating()
     {
-        var chat = await ChatService.GetChatAsync(ChatIdToDelete);
+        var chat = await ChatService.GetChatAsync(ChatIdToDelete, CurrentUserId);
         var partnerId = chat.User1Id == CurrentUserId ? chat.User2Id : chat.User1Id;
         await ChatService.RatePartnerAsync(partnerId, SelectedRating, 0);
         IsPartnerRated = true;
@@ -369,7 +369,7 @@
 
     private async Task DeleteChat(int chatId)
     {
-        var chat = await ChatService.GetChatAsync(chatId);
+        var chat = await ChatService.GetChatAsync(chatId, CurrentUserId);
         var partnerId = chat.User1Id == CurrentUserId ? chat.User2Id : chat.User1Id;
 
         if (partnerId != null)

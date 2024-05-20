@@ -226,8 +226,8 @@
             background-color: #0056b3;
         }
 
-    .btn-warning {
-        background-color: #ffa500;
+    .refresh-btn {
+        background-color: #d98c00;
         color: white;
         padding: 0.65vh 1.95vh;
         font-size: 2vh;
@@ -238,7 +238,7 @@
         box-shadow: 0 0.3vh 0.6vh rgba(0, 0, 0, 0.15);
     }
 
-        .btn-warning:hover {
+        .refresh-btn:hover {
             background-color: #cc8400;
         }
 </style>
@@ -247,8 +247,8 @@
 
 <div class="notifications-top-bar">
     <div class="delete-all-container">
-        <button class="btn btn-warning refresh-btn" @onclick="RefreshNotifications">Обновить</button>
-        <button class="btn btn-danger delete-all-btn" @onclick="DeleteAllNotifications">Удалить все</button>
+        <button class="refresh-btn" @onclick="RefreshNotifications">Обновить</button>
+        <button class="btn-danger delete-all-btn" @onclick="DeleteAllNotifications">Удалить все</button>
     </div>
 </div>
 
