@@ -224,15 +224,17 @@
     }
 </style>
 
+<PageTitle>LаngPrac</PageTitle>
+
 <div class="chat-list-layout">
     <div class="chat-list-header">
-        Chats
+        Чати
     </div>
     <div class="chat-list-container">
         @if (UserChats.Count == 0)
         {
             <div class="empty-chat-message">
-                Список чатов пуст
+                Список чатів порожній
             </div>
         }
         else
@@ -246,7 +248,7 @@
                             <span style="font-size: 1.5vh">Created: @chat.CreatedDate.ToString("dd.MM.yyyy")</span>
                         </div>
                     </div>
-                    <button class="delete-chat-button" @onclick:stopPropagation @onclick="() => ShowEndPracticeModal(chat.Id)">Закончить практику</button>
+                    <button class="delete-chat-button" @onclick:stopPropagation @onclick="() => ShowEndPracticeModal(chat.Id)">Завершити практику</button>
                 </div>
             }
         }
@@ -257,24 +259,24 @@
 <div id="endPracticeModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Завершение практики</h2>
+            <h2 class="modal-title">Завершення практики</h2>
             <span class="close" @onclick="CloseEndPracticeModal">&times;</span>
         </div>
         <div class="modal-body">
-            <p>Вы хотите повысить уровень языка?</p>
-            <p>После оценки партнера чат будет автоматически удален.</p>
+            <p>Ви хочете підвищити рівень мови?</p>
+            <p>Після оцінки партнера чат буде автоматично видалено.</p>
         </div>
         <div class="modal-footer">
-            <button class="btn-upgrade" @onclick="UpgradeLanguageLevel">Повысить уровень языка</button>
+            <button class="btn-upgrade" @onclick="UpgradeLanguageLevel">Підвищити рівень мови</button>
             @if (IsPartnerRated)
             {
-                <span>Вы оценили партнера</span>
+                <span>Ви оцінили партнера</span>
             }
             else
             {
-                <button class="btn-rate" @onclick="ShowRatePartnerModal">Оценить партнера</button>
+                <button class="btn-rate" @onclick="ShowRatePartnerModal">Оцінити партнера</button>
             }
-            <button class="btn-delete" @onclick="ConfirmDeleteChat">Удалить чат</button>
+            <button class="btn-delete" @onclick="ConfirmDeleteChat">Видалити чат</button>
         </div>
     </div>
 </div>
@@ -282,11 +284,11 @@
 <div id="ratePartnerModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Оценка партнера</h2>
+            <h2 class="modal-title">Оцінка партнера</h2>
             <span class="close" @onclick="CloseRatePartnerModal">&times;</span>
         </div>
         <div class="modal-body">
-            <p>Поставьте оценку вашему партнеру:</p>
+            <p>Поставте оцінку вашому партнеру:</p>
             <select @bind="SelectedRating">
                 @for (int i = 1; i <= 5; i++)
                 {
@@ -295,7 +297,7 @@
             </select>
         </div>
         <div class="modal-footer">
-            <button class="btn-rate-confirm" @onclick="SubmitRating">Оценить</button>
+            <button class="btn-rate-confirm" @onclick="SubmitRating">Оцінити</button>
         </div>
     </div>
 </div>

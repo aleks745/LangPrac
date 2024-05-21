@@ -243,12 +243,14 @@
         }
 </style>
 
+<PageTitle>LаngPrac</PageTitle>
+
 @attribute [Authorize]
 
 <div class="notifications-top-bar">
     <div class="delete-all-container">
-        <button class="refresh-btn" @onclick="RefreshNotifications">Обновить</button>
-        <button class="btn-danger delete-all-btn" @onclick="DeleteAllNotifications">Удалить все</button>
+        <button class="refresh-btn" @onclick="RefreshNotifications">Оновити</button>
+        <button class="btn-danger delete-all-btn" @onclick="DeleteAllNotifications">Видалити всі</button>
     </div>
 </div>
 
@@ -271,26 +273,26 @@
                 @if (notification.HasPartnerInitiatedEnd)
                 {
                     <div class="btn-container">
-                        <button class="btn-upgrade" @onclick="UpgradeLanguageLevel">Повысить уровень языка</button>
+                        <button class="btn-upgrade" @onclick="UpgradeLanguageLevel">Підвищити рівень мови</button>
                         @if (notification.HasPartnerInitiatedEnd && !notification.IsRated)
                         {
-                            <button class="btn-rate-partner" @onclick="() => ShowRatePartnerModal(notification.SenderId, notification.Id)">Оценить партнера</button>
+                            <button class="btn-rate-partner" @onclick="() => ShowRatePartnerModal(notification.SenderId, notification.Id)">Оцінити партнера</button>
                         }
-                        <button class="btn-delete" @onclick="() => RemoveNotification(notification.Id)">Удалить уведомление</button>
+                        <button class="btn-delete" @onclick="() => RemoveNotification(notification.Id)">Видалити повідомлення</button>
                     </div>
                 }
                 else if (notification.Status == "Pending")
                 {
-                    <button class="btn btn-success" @onclick="() => AcceptInvite(notification.Id)">Принять заявку</button>
-                    <button class="btn btn-danger" @onclick="() => DeclineInvite(notification)">Отклонить заявку</button>
+                    <button class="btn btn-success" @onclick="() => AcceptInvite(notification.Id)">Прийняти заявку</button>
+                    <button class="btn btn-danger" @onclick="() => DeclineInvite(notification)">Відхилити заявку</button>
                 }
             </div>
         }
     }
     else
     {
-        <p style="background-color: rgba(255, 255, 255, 0.7); border: 0.18vw solid #000; border-radius: 0.9vw; padding: 0.5vw; box-shadow: 0.2vw 0.2vw 0.5vw rgba(0, 0, 0, 0.5); max-width: 30vw; margin: 2vw auto; text-align: center;">
-            No notifications to display.
+        <p style="background-color: rgba(255, 255, 255, 0.65); border: 0.1vw solid #000; border-radius: 0.9vw; padding: 0.5vw; box-shadow: 0.2vw 0.2vw 0.5vw rgba(0, 0, 0, 0.5); max-width: 30vw; margin: 2vw auto; text-align: center;">
+            Повідомлень немає
         </p>
     }
 </div>
@@ -299,11 +301,11 @@
 <div id="ratePartnerModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Оценка партнера</h2>
+            <h2 class="modal-title">Оцінка партнера</h2>
             <span class="close" @onclick="CloseRatePartnerModal">&times;</span>
         </div>
         <div class="modal-body">
-            <p>Поставьте оценку вашему партнеру:</p>
+            <p>Поставте оцінку вашому партнеру:</p>
             <select @bind="SelectedRating">
                 @for (int i = 1; i <= 5; i++)
                 {
@@ -312,7 +314,7 @@
             </select>
         </div>
         <div class="modal-footer">
-            <button class="btn-rate-confirm" @onclick="SubmitRating">Оценить</button>
+            <button class="btn-rate-confirm" @onclick="SubmitRating">Оцінити</button>
         </div>
     </div>
 </div>
@@ -373,7 +375,7 @@
             {
                 SenderId = notification.ReceiverId,
                 ReceiverId = notification.SenderId,
-                Message = $"Your invitation to {UserManager.FindByIdAsync(notification.ReceiverId).Result.UserName} has been declined.",
+                Message = $"Ваше запрошення до {UserManager.FindByIdAsync(notification.ReceiverId).Result.UserName} було відхилено.",
                 Status = "Declined"
             };
 
@@ -411,7 +413,7 @@
                     {
                         SenderId = notification.ReceiverId,
                         ReceiverId = notification.SenderId,
-                        Message = $"Your invitation to {UserManager.FindByIdAsync(notification.ReceiverId).Result.UserName} has been declined.",
+                        Message = $"Ваше запрошення до {UserManager.FindByIdAsync(notification.ReceiverId).Result.UserName} було відхилено.",
                         Status = "Declined",
                         UserInfo = string.Empty // Ensure UserInfo is not null
                     };

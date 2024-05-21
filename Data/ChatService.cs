@@ -63,7 +63,7 @@ namespace LangPrac.Services
             {
                 SenderId = senderId,
                 ReceiverId = receiverId,
-                Message = $"Ваш партнер {sender.Nickname ?? sender.UserName} подтвердил заявку и ваш чат создан.",
+                Message = $"Ваш партнер {sender.Nickname ?? sender.UserName} підтвердив заявку і ваш чат створено.",
                 Status = "Confirmed"
             };
 
@@ -122,15 +122,15 @@ namespace LangPrac.Services
                 .Select(ul => $"{ul.Language.LanguageName} ({ul.LanguageLvl.GetEnumMemberValue()})")
                 .ToList();
 
-            var userInfo = $"Возраст: {CalculateAge(sender.DateOfBirth)}, Страна: {sender.Country}, Пол: {sender.Gender}";
+            var userInfo = $"Вік: {CalculateAge(sender.DateOfBirth)}, Країна: {sender.Country}, Стать: {sender.Gender}";
 
             // Создаем подробное уведомление для получателя
             var notificationForReceiver = new Notification
             {
                 SenderId = sender.Id,
                 ReceiverId = receiver.Id,
-                Message = $"Вы получили приглашение на практику от {sender.Nickname ?? sender.UserName}.",
-                UserLanguagesInfo = $"Знает: {string.Join(", ", knownLanguages)}; Изучает: {string.Join(", ", learningLanguages)}",
+                Message = $"Ви отримали запрошення на практику від {sender.Nickname ?? sender.UserName}.",
+                UserLanguagesInfo = $"Знає: {string.Join(", ", knownLanguages)}; Вивчає: {string.Join(", ", learningLanguages)}",
                 UserInfo = userInfo,
             };
 
@@ -139,7 +139,7 @@ namespace LangPrac.Services
             {
                 SenderId = sender.Id,
                 ReceiverId = sender.Id,
-                Message = $"Ваше приглашение {receiver.Nickname ?? receiver.UserName} на практику было отправлено.",
+                Message = $"Ваше запрошення {receiver.Nickname ?? receiver.UserName} на практику було надіслано.",
                 Status = "Sent"
             };
 
@@ -189,9 +189,9 @@ namespace LangPrac.Services
             {
                 SenderId = senderId,
                 ReceiverId = receiverId,
-                Message = $"Ваш партнер {sender.Nickname ?? sender.UserName} инициировал завершение практики.",
+                Message = $"Ваш партнер {sender.Nickname ?? sender.UserName} ініціював завершення практики.",
                 HasPartnerInitiatedEnd = true,
-                UserInfo = string.Empty // Ensure UserInfo is not null
+                UserInfo = string.Empty
             };
 
             _context.Notifications.Add(notification);

@@ -10,31 +10,31 @@
                 <AuthorizeView>
                     <Authorized>
                         <li class="nav-item">
-                            <a class="nav-link-custom" href="search">Search</a>
+                            <a class="nav-link-custom" href="search">Пошук</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link-custom" href="notifications">Notifications</a>
+                            <a class="nav-link-custom" href="notifications">Повідомлення</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link-custom" href="chats">Chats</a>
+                            <a class="nav-link-custom" href="chats">Чати</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link-custom" href="profile">Profile</a>
+                            <a class="nav-link-custom" href="profile">Профіль</a>
                         </li>
                         <li class="nav-item">
                             <form action="Account/Logout" method="post">
                                 <AntiforgeryToken />
                                 <input type="hidden" name="ReturnUrl" value="Account/Login" />
-                                <button type="submit" class="nav-link-custom logout-button">Logout</button>
+                                <button type="submit" class="nav-link-custom logout-button">Вихід</button>
                             </form>
                         </li>
                     </Authorized>
                     <NotAuthorized>
                         <li class="nav-item">
-                            <a class="nav-link-custom" href="Account/Register">Register</a>
+                            <a class="nav-link-custom" href="Account/Register">Реєстрація</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link-custom" href="Account/Login">Login</a>
+                            <a class="nav-link-custom" href="Account/Login">Авторизація</a>
                         </li>
                     </NotAuthorized>
                 </AuthorizeView>

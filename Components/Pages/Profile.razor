@@ -188,7 +188,7 @@
 
 </style>
 
-<PageTitle>Profile Management</PageTitle>
+<PageTitle>LаngPrac</PageTitle>
 
 <div class="ppage">
     <div class="content-container">
@@ -205,7 +205,7 @@
                         else
                         {
                             <div class="avatar-placeholder">
-                                <span>Upload Avatar</span>
+                                <span>Завантажити аватар</span>
                             </div>
                         }
                         <InputFile OnChange="@LoadAvatar" accept="image/*" class="avatar-input" />
@@ -213,12 +213,12 @@
                     <div class="rating">
                         @if (user.AverageRating == 0)
                         {
-                            <h5>Пользователя еще никто не оценил</h5>
+                            <h5>Користувача ще ніхто не оцінив</h5>
                         }
                         else
                         {
                             <h5>Рейтинг: @user.AverageRating</h5>
-                            <h5>Количество оценок: @user.UserRatings.Count</h5>
+                            <h5>Кількість оцінок: @user.UserRatings.Count</h5>
                         }
                     </div>
                 </div>
@@ -226,11 +226,11 @@
         }
         else
         {
-            <p>Пользователь не найден.</p>
+            <p>Користувач не знайдений.</p>
         }
 
             <div class="languages-container">
-                <h3>Your Languages</h3>
+                <h3>Ваші мови</h3>
                 <div class="row languages-list">
                     <div class="col-md-12">
                         @if (userLanguages.Count > 0)
@@ -242,14 +242,14 @@
                                         <div>
                                             <strong>@userLanguage.Language.LanguageName</strong> - @userLanguage.LanguageLvl (@userLanguage.LanguageType)
                                         </div>
-                                        <button class="btn btn-danger btn-sm" @onclick="() => DeleteUserLanguageAsync(userLanguage)">Delete</button>
+                                        <button class="btn btn-danger btn-sm" @onclick="() => DeleteUserLanguageAsync(userLanguage)">Видалити</button>
                                     </li>
                                 }
                             </ul>
                         }
                         else
                         {
-                            <p>You haven't added any languages yet.</p>
+                            <p>Ви ще не додали жодної мови.Ви ще не додали жодної мови.</p>
                         }
                     </div>
                 </div>
@@ -261,22 +261,22 @@
                             <ValidationSummary class="text-danger" role="alert" />
                             <div class="form-floating mb-3">
                                 <InputSelect @bind-Value="LanguageInput.LanguageType" class="form-control">
-                                    <option value="">Select language type</option>
-                                    <option value="Knows">Knows</option>
-                                    <option value="Wants to Learn">Wants to Learn</option>
+                                <option value="">Оберіть тип мови</option>
+                                    <option value="Knows">Знаю</option>
+                                    <option value="Wants to Learn">Хочу вивчати</option>
                                 </InputSelect>
                                 <label for="language-type" class="form-label">Language Type</label>
                                 <ValidationMessage For="() => LanguageInput.LanguageType" class="text-danger" />
                             </div>
                         <div class="form-floating mb-3">
                             <InputSelect @bind-Value="LanguageInput.LanguageId" class="form-control">
-                                <option value="">Select a language</option>
+                                <option value="">Оберіть мову</option>
                                 @foreach (var language in languages)
                                 {
                                     <option value="@language.LanguageId">@language.LanguageName</option>
                                 }
                             </InputSelect>
-                            <label for="language" class="form-label">Language</label>
+                            <label for="language" class="form-label">Мова</label>
                             <ValidationMessage For="() => LanguageInput.LanguageId" class="text-danger" />
                         </div>
                             <div class="form-floating mb-3">
@@ -287,10 +287,10 @@
                                         <option value="@enumValue">@enumValue.GetEnumMemberValue()</option>
                                     }
                                 </select>
-                                <label for="language-level" class="form-label">Language Level</label>
+                                <label for="language-level" class="form-label">Рівень володіння мовою</label>
                                 <ValidationMessage For="() => selectedLanguageLvl" class="text-danger" />
                             </div>
-                            <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+                            <button type="submit" class="w-100 btn btn-lg btn-primary">Зберегти</button>
                         </EditForm>
                     </div>
                 </div>
@@ -298,70 +298,70 @@
 
             <div class="profile-email-container">
                 <div class="profile-form">
-                    <h3>Personal data</h3>
+                <h3>Особисті дані</h3>
                     <p>@profileMessage</p>
                     <EditForm Model="ProfileInput" OnValidSubmit="OnValidSubmitProfileAsync">
                         <DataAnnotationsValidator />
                         <ValidationSummary class="text-danger" role="alert" />
                         <div class="form-floating mb-3">
-                            <InputText @bind-Value="ProfileInput.Nickname" class="form-control" placeholder="Please enter your nickname." />
-                            <label for="nickname" class="form-label">Nickname</label>
+                            <InputText @bind-Value="ProfileInput.Nickname" class="form-control" placeholder="Будь ласка, введіть ваше ім'я." />
+                            <label for="nickname" class="form-label">Ім'я</label>
                             <ValidationMessage For="() => ProfileInput.Nickname" class="text-danger" />
                         </div>
                         <div class="form-floating mb-3">
-                            <InputText @bind-Value="ProfileInput.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
-                            <label for="phone-number" class="form-label">Phone number</label>
+                        <InputText @bind-Value="ProfileInput.PhoneNumber" class="form-control" placeholder="Будь ласка, введіть номер телефону." />
+                            <label for="phone-number" class="form-label">Номер телефону</label>
                             <ValidationMessage For="() => ProfileInput.PhoneNumber" class="text-danger" />
                         </div>
                         <div class="form-floating mb-3">
-                            <InputDate @bind-Value="ProfileInput.DateOfBirth" class="form-control" placeholder="Please enter your date of birth."
+                            <InputDate @bind-Value="ProfileInput.DateOfBirth" class="form-control" placeholder="Будь ласка, введіть дату народження."
                                        Min="@DateTime.Now.AddYears(-80).ToString("yyyy-MM-dd")" Max="@DateTime.Now.AddYears(-18).ToString("yyyy-MM-dd")" />
-                            <label for="date-of-birth" class="form-label">Date of birth</label>
+                            <label for="date-of-birth" class="form-label">Дата народження</label>
                             <ValidationMessage For="() => ProfileInput.DateOfBirth" class="text-danger" />
                         </div>
                         <div class="form-floating mb-3">
                             <InputSelect @bind-Value="ProfileInput.Country" class="form-control">
-                                <option value="">Select your country</option>
+                                <option value="">Оберіть країну</option>
                                 @foreach (var country in countries)
                                 {
                                     <option value="@country">@country</option>
                                 }
                             </InputSelect>
-                            <label for="country" class="form-label">Country</label>
+                            <label for="country" class="form-label">Країна</label>
                         </div>
                         <div class="form-floating mb-3">
                             <InputSelect @bind-Value="ProfileInput.Gender" class="form-control">
-                                <option value="">Select your gender</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
+                                <option value="">Оберіть стать</option>
+                                <option value="Male">Чоловіча</option>
+                                <option value="Female">Жіноча</option>
+                                <option value="Other">Інша</option>
                             </InputSelect>
-                            <label for="gender" class="form-label">Gender</label>
+                            <label for="gender" class="form-label">Стать</label>
                         </div>
-                        <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+                        <button type="submit" class="w-100 btn btn-lg btn-primary">Зберегти</button>
                     </EditForm>
                 </div>
 
                 <div class="email-form">
-                    <h3>Manage email</h3>
+                    <h3>Керування електронною поштою</h3>
                     <p>@emailMessage</p>
                     <EditForm Model="EmailInput" OnValidSubmit="OnValidSubmitEmailAsync">
                         <DataAnnotationsValidator />
                         <ValidationSummary class="text-danger" role="alert" />
                         <div class="form-floating mb-3 input-group">
-                            <input type="text" value="@email" class="form-control" placeholder="Please enter your email." disabled />
+                        <input type="text" value="@email" class="form-control" placeholder="Будь ласка, введіть свою електронну пошту." disabled />
                             <div class="input-group-append">
                                 <span class="h-100 input-group-text text-success font-weight-bold">✓</span>
                             </div>
-                            <label for="email" class="form-label">Email</label>
+                            <label for="email" class="form-label">Електронна пошта</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <InputText @bind-Value="EmailInput.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="Please enter new email." />
-                            <label for="new-email" class="form-label">New email</label>
+                            <InputText @bind-Value="EmailInput.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="Будь ласка, введіть нову електронну адресу." />
+                            <label for="new-email" class="form-label">Нова електронна пошта</label>
                             <ValidationMessage For="() => EmailInput.NewEmail" class="text-danger" />
                         </div>
-                        <button type="submit" class="w-100 btn btn-lg btn-primary">Change email</button>
-                        <button class="btn btn-info" @onclick="OpenPasswordModal">Manage password</button>
+                        <button type="submit" class="w-100 btn btn-lg btn-primary">Змінити електронну пошту</button>
+                        <button class="btn btn-info" @onclick="OpenPasswordModal">Керування паролем</button>
                     </EditForm>
                 </div>
             </div>
@@ -369,7 +369,7 @@
             <Modal BootstrapClass="border-success" CustomStyle="width:40vw; border-radius: 1vh;" Open="IsPasswordModelOpen">
                 <ContentContent>
                     <p class="text-center text-muted">
-                        <h3>Change password</h3>
+                    <h3>Змінити пароль</h3>
                     <p>@passwordMessage</p>
                     <div class="row">
                         <div class="col-md-6">
@@ -377,21 +377,21 @@
                                 <DataAnnotationsValidator />
                                 <ValidationSummary class="text-danger" role="alert" />
                                 <div class="form-floating mb-3">
-                                    <InputText type="password" @bind-Value="PasswordInput.OldPassword" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Please enter your old password." />
-                                    <label for="old-password" class="form-label">Old password</label>
+                                <InputText type="password" @bind-Value="PasswordInput.OldPassword" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Будь ласка, введіть старий пароль." />
+                                    <label for="old-password" class="form-label">Старий пароль</label>
                                     <ValidationMessage For="() => PasswordInput.OldPassword" class="text-danger" />
                                 </div>
                                 <div class="form-floating mb-3">
-                                    <InputText type="password" @bind-Value="PasswordInput.NewPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Please enter your new password." />
-                                    <label for="new-password" class="form-label">New password</label>
+                                    <InputText type="password" @bind-Value="PasswordInput.NewPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Будь ласка, введіть новий пароль." />
+                                    <label for="new-password" class="form-label">Новий пароль</label>
                                     <ValidationMessage For="() => PasswordInput.NewPassword" class="text-danger" />
                                 </div>
                                 <div class="form-floating mb-3">
-                                    <InputText type="password" @bind-Value="PasswordInput.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Please confirm your new password." />
-                                    <label for="confirm-password" class="form-label">Confirm password</label>
+                                    <InputText type="password" @bind-Value="PasswordInput.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Будь ласка, підтвердіть ваш новий пароль." />
+                                    <label for="confirm-password" class="form-label">Підтвердіть пароль</label>
                                     <ValidationMessage For="() => PasswordInput.ConfirmPassword" class="text-danger" />
                                 </div>
-                                <button type="submit" class="w-100 btn btn-lg btn-primary">Update password</button>
+                                <button type="submit" class="w-100 btn btn-lg btn-primary">Оновити пароль</button>
                             </EditForm>
                         </div>
                     </div>
@@ -399,7 +399,7 @@
                 </ContentContent>
                 <ButtonTemplate>
                     <div class="modal-close-button">
-                        <button class="btn btn-danger btn-sm" @onclick="ClosePasswordModal">Close</button>
+                        <button class="btn btn-danger btn-sm" @onclick="ClosePasswordModal">Закрити</button>
                     </div>
                 </ButtonTemplate>
             </Modal>
@@ -504,12 +504,12 @@
             }
             else
             {
-                profileMessage = "Error: Failed to update the user.";
+                profileMessage = "Помилка при оновлені користувача";
             }
         }
         else
         {
-            profileMessage = "No changes detected.";
+            profileMessage = "Змін не виявлено";
         }
 
         StateHasChanged();
@@ -519,14 +519,14 @@
     {
         if (EmailInput.NewEmail is null || EmailInput.NewEmail == email)
         {
-            emailMessage = "Your email is unchanged.";
+            emailMessage = "Ваш email не змінився";
             return;
         }
 
         var userWithNewEmail = await UserManager.FindByEmailAsync(EmailInput.NewEmail);
         if (userWithNewEmail != null)
         {
-            emailMessage = "Email is already in use.";
+            emailMessage = "Email вже зайнятий";
             return;
         }
 
@@ -537,11 +537,11 @@
 
         if (updateResult.Succeeded)
         {
-            emailMessage = "Email and username updated successfully.";
+            emailMessage = "Email успішно оновлений";
         }
         else
         {
-            emailMessage = "Error updating email and username.";
+            emailMessage = "Помилка при оновлені email";
         }
     }
 
@@ -618,7 +618,7 @@
         var changePasswordResult = await UserManager.ChangePasswordAsync(user, PasswordInput.OldPassword, PasswordInput.NewPassword);
         if (!changePasswordResult.Succeeded)
         {
-            passwordMessage = $"Error: {string.Join(",", changePasswordResult.Errors.Select(error => error.Description))}";
+            passwordMessage = $"Помилка: {string.Join(",", changePasswordResult.Errors.Select(error => error.Description))}";
             StateHasChanged(); // Make sure to update the UI if you're in a Blazor component
             return;
         }
@@ -634,7 +634,7 @@
         catch (Exception ex)
         {
             Logger.LogError("An error occurred: {0}", ex);
-            passwordMessage = "An error occurred while signing in after password change.";
+            passwordMessage = "Помилка при оновлені паролю";
             StateHasChanged(); // Update UI to reflect the error
         }
     }
@@ -728,14 +728,14 @@
         public string OldPassword { get; set; } = "";
 
         [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [StringLength(100, ErrorMessage = "Довжина {0} має бути не менше {2} і не більше {1} символів.", MinimumLength = 6)]
         [DataType(DataType.Password)]
         [Display(Name = "New password")]
         public string NewPassword { get; set; } = "";
 
         [DataType(DataType.Password)]
         [Display(Name = "Confirm new password")]
-        [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
+        [Compare("NewPassword", ErrorMessage = "Новий пароль і пароль підтвердження не збігаються.")]
         public string ConfirmPassword { get; set; } = "";
     }
 

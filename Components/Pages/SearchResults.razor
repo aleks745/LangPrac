@@ -209,10 +209,11 @@
     }
 </style>
 
+<PageTitle>LаngPrac</PageTitle>
 
 <div class="results-container">
     <button class="back-to-search" @onclick="GoBack">Назад</button>
-    @if (!string.IsNullOrEmpty(searchMessage) && searchMessage == "No more partners found.")
+    @if (!string.IsNullOrEmpty(searchMessage) && searchMessage == "Партнерів більше не знайдено.")
     {
         <div class="no-more-partners">@searchMessage</div>
     }
@@ -230,16 +231,16 @@
                 }
                 else
                 {
-                    <div class="avatar-placeholder">No Avatar</div>
+                    <div class="avatar-placeholder">Без аватарки</div>
                 }
             </div>
             <div class="info">
                 <strong>@CurrentUser.Nickname</strong> <br />
-                Country: @(!string.IsNullOrEmpty(CurrentUser?.Country) ? CurrentUser.Country : "Unknown") <br />
-                Gender: @(!string.IsNullOrEmpty(CurrentUser?.Gender) ? CurrentUser.Gender : "Unknown") <br />
-                <span>Age: @(CalculateAge(CurrentUser?.DateOfBirth)?.ToString() ?? "Unknown")</span> <br />
+                Країна: @(!string.IsNullOrEmpty(CurrentUser?.Country) ? CurrentUser.Country : "Невідомо") <br />
+                Стать: @(!string.IsNullOrEmpty(CurrentUser?.Gender) ? CurrentUser.Gender : "Невідомо") <br />
+                <span>Вік: @(CalculateAge(CurrentUser?.DateOfBirth)?.ToString() ?? "Невідомо")</span> <br />
                 <div class="language-info">
-                    <strong>Languages Known:</strong>
+                    <strong>Мови, які знає:</strong>
                     @if (CurrentUser?.UserLanguages?.Any(ul => ul.LanguageType == "Knows") == true)
                     {
                         @foreach (var lang in CurrentUser?.UserLanguages?.Where(ul => ul.LanguageType == "Knows"))
@@ -247,7 +248,7 @@
                             <div class="language">@lang?.Language.LanguageName (@lang?.LanguageLvl.GetEnumMemberValue())</div>
                         }
                     }
-                    <strong>Languages Learning:</strong>
+                    <strong>Мови, які вивчає:</strong>
                     @if (CurrentUser?.UserLanguages != null && CurrentUser.UserLanguages.Any(ul => ul.LanguageType == "Wants to Learn"))
                     {
                         foreach (var lang in CurrentUser.UserLanguages.Where(ul => ul.LanguageType == "Wants to Learn"))
@@ -264,31 +265,31 @@
                     @if (CurrentUser.HasRatings)
                     {
                         <span>@CurrentUser.AverageRating</span> <br />
-                        <span class="count">Количество оценок: @CurrentUser.RatingCount</span>
+                        <span class="count">Кількість оцінок: @CurrentUser.RatingCount</span>
                     }
                     else
                     {
-                        <span>Нет оценок</span>
+                        <span>Немає оцінок</span>
                     }
                 </div>
                 @if (UserChats.Any(c => (c.User1Id == CurrentUser.Id && c.User2Id == UserManager.GetUserId(HttpContext.User)) ||
                (c.User2Id == CurrentUser.Id && c.User1Id == UserManager.GetUserId(HttpContext.User))))
                 {
-                    <span>Чат с этим пользователем уже существует</span>
+                    <span>Чат із цим користувачем уже існує</span>
                 }
                 else if (invitationSent.ContainsKey(CurrentUser?.Id) && invitationSent[CurrentUser.Id])
                 {
-                    <span class="invitation-sent">Invite Send</span>
+                    <span class="invitation-sent">Запрошено</span>
                 }
                 else
                 {
-                    <button class="btn-invite" @onclick="() => SendInvite(CurrentUser)">Пригласить</button>
+                    <button class="btn-invite" @onclick="() => SendInvite(CurrentUser)">Запросити</button>
                 }
             </div>
         </div>
-        @if (!isLoading && searchMessage != "No more partners found.")
+        @if (!isLoading && searchMessage != "Партнерів більше не знайдено.")
         {
-            <button class="btn-find-more" @onclick="FindMoreAsync">Find More</button>
+            <button class="btn-find-more" @onclick="FindMoreAsync">Знайти ще</button>
         }
     }
 </div>
@@ -338,7 +339,7 @@
         }
         else
         {
-            searchMessage = "No matching users found.";
+            searchMessage = "Відповідних партнерів не знайдено.";
             isLoading = false;
         }
         UpdateState();
@@ -373,7 +374,7 @@
         currentIndex++;
         if (currentIndex >= Users.Count)
         {
-            searchMessage = "No more partners found.";
+            searchMessage = "Партнерів більше не знайдено.";
             CurrentUser = null;
             isLoading = false;
             UpdateState();
@@ -387,7 +388,7 @@
 
     private void UpdateState()
     {
-        StateHasChanged(); // Обновляет состояние компонента и перерисовывает UI
+        StateHasChanged();
     }
 
     private async Task SendInvite(ApplicationUser user)

@@ -361,11 +361,12 @@
     }
 </style>
 
+<PageTitle>LаngPrac</PageTitle>
 
 <div class="chat-layout">
     <div class="chat-header">
         <span>@PartnerName</span>
-        <button class="delete-chat-button" @onclick="ShowEndPracticeModal">Закончить практику</button>
+        <button class="delete-chat-button" @onclick="ShowEndPracticeModal">Закінчити практику</button>
     </div>
 
     <div class="chat-container" id="chatContainer">
@@ -390,11 +391,11 @@
                             }
                             else if (message.Timestamp.Date == DateTime.UtcNow.Date.AddDays(-1))
                             {
-                                <text>Вчера @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                                <text>Вчора @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
                             }
                             else if (message.Timestamp.Date == DateTime.UtcNow.Date.AddDays(-2))
                             {
-                                <text>Позавчера @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                                <text>Позавчора @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
                             }
                             else
                             {
@@ -411,11 +412,11 @@
                                 }
                                 else if (message.Timestamp.Date == DateTime.UtcNow.Date.AddDays(-1))
                                 {
-                                    <text>Вчера @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                                    <text>Вчора @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
                                 }
                                 else if (message.Timestamp.Date == DateTime.UtcNow.Date.AddDays(-2))
                                 {
-                                    <text>Позавчера @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                                    <text>Позавчора @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
                                 }
                                 else
                                 {
@@ -434,7 +435,7 @@
     </div>
     <div class="card-footer">
         <div class="input-group">
-            <textarea name="" class="form-control type_msg" placeholder="Type your message..." @bind="NewMessage"></textarea>
+            <textarea name="" class="form-control type_msg" placeholder="Напишіть своє повідомлення..." @bind="NewMessage"></textarea>
             <div class="input-group-append">
                 <span class="input-group-text send_btn" @onclick="SendMessage">
                     <i class="fas fa-location-arrow"></i>
@@ -447,24 +448,24 @@
 <div id="endPracticeModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Завершение практики</h2>
+            <h2 class="modal-title">Завершення практики</h2>
             <span class="close" @onclick="CloseEndPracticeModal">&times;</span>
         </div>
         <div class="modal-body">
-            <p>Вы хотите повысить уровень языка?</p>
-            <p>После оценки партнера чат будет автоматически удален.</p>
+            <p>Ви хочете підвищити рівень мови?</p>
+            <p>Після оцінки партнера чат буде автоматично видалено.</p>
         </div>
         <div class="modal-footer">
             <button class="btn-upgrade" @onclick="UpgradeLanguageLevel">Повысить уровень языка</button>
             @if (IsPartnerRated)
             {
-                <span>Вы оценили партнера</span>
+                <span>Ви оцінили партнера</span>
             }
             else
             {
-                <button class="btn-rate" @onclick="ShowRatePartnerModal">Оценить партнера</button>
+                <button class="btn-rate" @onclick="ShowRatePartnerModal">Оцінити партнера</button>
             }
-            <button class="btn-delete" @onclick="ConfirmDeleteChat">Удалить чат</button>
+            <button class="btn-delete" @onclick="ConfirmDeleteChat">Видалити чат</button>
         </div>
     </div>
 </div>
@@ -472,11 +473,11 @@
 <div id="ratePartnerModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Оценка партнера</h2>
+            <h2 class="modal-title">Оцінка партнера</h2>
             <span class="close" @onclick="CloseRatePartnerModal">&times;</span>
         </div>
         <div class="modal-body">
-            <p>Поставьте оценку вашему партнеру:</p>
+            <p>Поставте оцінку вашому партнеру:</p>
             <select @bind="SelectedRating">
                 @for (int i = 1; i <= 5; i++)
                 {
@@ -485,7 +486,7 @@
             </select>
         </div>
         <div class="modal-footer">
-            <button class="btn-rate-confirm" @onclick="SubmitRating">Оценить</button>
+            <button class="btn-rate-confirm" @onclick="SubmitRating">Оцінити</button>
         </div>
     </div>
 </div>

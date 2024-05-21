@@ -127,7 +127,7 @@
     }
 </style>
 
-<PageTitle>Log in</PageTitle>
+<PageTitle>Авторизація</PageTitle>
 
 <div class="lalert-box">
     <p class="lalert"></p>
@@ -135,16 +135,16 @@
 
 <div class="lbody">
     <div class="lform">
-        <h1 class="lheading">Login</h1>
+        <h1 class="lheading">Вхід</h1>
         <StatusMessage Message="@errorMessage" />
         <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
-            <InputText @bind-Value="Input.Email" type="email" class="email" autocomplete="username" aria-required="true" placeholder="Email" />
-            <InputText type="password" @bind-Value="Input.Password" class="password" autocomplete="current-password" aria-required="true" placeholder="Password" />
-            <button class="lsubmit-btn">Log in</button>
+            <InputText @bind-Value="Input.Email" type="email" class="email" autocomplete="username" aria-required="true" placeholder="Електронна пошта" />
+            <InputText type="password" @bind-Value="Input.Password" class="password" autocomplete="current-password" aria-required="true" placeholder="Пароль" />
+            <button class="lsubmit-btn">Увійти</button>
         </EditForm>
-        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" class="llink">Don't have an account? Register one</a>
+        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" class="llink">Не маєте облікового запису? Зареєструватися</a>
     </div>
 </div>
 
@@ -168,7 +168,7 @@
         if (HttpContext.Request.Query.TryGetValue("RegistrationSuccess", out var registrationSuccess) && registrationSuccess == "True")
         {
             // Показываем сообщение об успешной регистрации
-            errorMessage = "Registration successful. Please log in.";
+            errorMessage = "Реєстрація успішна. Будь ласка, увійдіть в аккаунт";
         }
 
         if (HttpMethods.IsGet(HttpContext.Request.Method))
@@ -189,7 +189,7 @@
         else
         {
             Logger.LogWarning("User login attempt failed.");
-            errorMessage = "Error: Invalid login attempt.";
+            errorMessage = "Невірний логін або пароль";
         }
     }
 

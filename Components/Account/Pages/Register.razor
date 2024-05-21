@@ -131,7 +131,7 @@
     }
 </style>
 
-<PageTitle>Register</PageTitle>
+<PageTitle>Реєстрація</PageTitle>
 
 <div class="lalert-box">
     <p class="lalert"></p>
@@ -139,19 +139,19 @@
 
 <div class="lbody">
     <div class="lform">
-        <h1 class="lheading">Register</h1>
+        <h1 class="lheading">Реєстрація</h1>
         <StatusMessage Message="@Message" />
         <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
             @* <input type="text" placeholder="name" autocomplete="off" class="name" required> *@
-            <InputText @bind-Value="Input.Email" type="email" class="email" autocomplete="username" aria-required="true" placeholder="Email" />
-            <InputText @bind-Value="Input.Nickname" class="name" autocomplete="off" aria-required="true" placeholder="Nickname" />
-            <InputText type="password" @bind-Value="Input.Password" class="password" autocomplete="new-password" aria-required="true" placeholder="Password" />
-            <InputText type="password" @bind-Value="Input.ConfirmPassword" class="password" autocomplete="new-password" aria-required="true" placeholder="Confirm password" />
-            <button type="submit" class="lsubmit-btn">Register</button>
+            <InputText @bind-Value="Input.Email" type="email" class="email" autocomplete="username" aria-required="true" placeholder="Електронна пошта" />
+            <InputText @bind-Value="Input.Nickname" class="name" autocomplete="off" aria-required="true" placeholder="Ім'я" />
+            <InputText type="password" @bind-Value="Input.Password" class="password" autocomplete="new-password" aria-required="true" placeholder="Пароль" />
+            <InputText type="password" @bind-Value="Input.ConfirmPassword" class="password" autocomplete="new-password" aria-required="true" placeholder="Підтвердіть пароль" />
+            <button type="submit" class="lsubmit-btn">Зареєструватися</button>
         </EditForm>
-        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Login", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" class="llink">Already have an account ? Log in here</a>
+        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Login", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" class="llink">Вже маєте обліковий запис? Увійдіть тут</a>
     </div>
 </div>
 
@@ -224,14 +224,14 @@
         public string Nickname { get; set; } = "";
 
         [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [StringLength(100, ErrorMessage = "Довжина {0} має бути не менше {2} і не більше {1} символів.", MinimumLength = 6)]
         [DataType(DataType.Password)]
         [Display(Name = "Password")]
         public string Password { get; set; } = "";
 
         [DataType(DataType.Password)]
         [Display(Name = "Confirm password")]
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        [Compare("Password", ErrorMessage = "Пароль і пароль підтвердження не збігаються.")]
         public string ConfirmPassword { get; set; } = "";
     }
 }

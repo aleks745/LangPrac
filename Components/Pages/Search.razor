@@ -199,18 +199,20 @@
         }
 </style>
 
+<PageTitle>LаngPrac</PageTitle>
+
 @attribute [Authorize]
 
 <div class="search-container">
     @if (quickSearchVisible)
     {
         <h3 class="mlabel">Пошук</h3>
-        <div class="description" style="padding-top: 2vh">Быстрый подбор партнера исходя из ваших настроек</div>
-        <button class="btn btn-primary styled-button" @onclick="QuickSearchAsync">Quick Search</button>
-        <div class="description" style="padding-top: 2vh">Расширенный поиск по различным критериям и фильтрам</div>
+        <div class="description" style="padding-top: 2vh">Швидкий підбір партнера згідно ваших налаштувань</div>
+        <button class="btn btn-primary styled-button" @onclick="QuickSearchAsync">Швидкий пошук</button>
+        <div class="description" style="padding-top: 2vh">Розширений пошук за різними критеріями та фільтрами</div>
     }
 
-    <button class="btn btn-primary styled-button" @onclick="ToggleAdvancedSearch">Advanced Search</button>
+    <button class="btn btn-primary styled-button" @onclick="ToggleAdvancedSearch">Розширений пошук</button>
 
     @if (!string.IsNullOrEmpty(searchMessage))
     {
@@ -222,7 +224,7 @@
     @if (showAdvancedSearch)
     {
         <div>
-            <label for="languageToLearn">Language to Learn:</label>
+            <label for="languageToLearn">Мова для вивчення:</label>
             <select @bind="selectedLanguageId" id="languageToLearn">
                 @foreach (var language in userLanguages.Where(ul => ul.LanguageType == "Wants to Learn"))
                 {
@@ -231,7 +233,7 @@
             </select>
             <br />
 
-            <label for="partnerLanguageLevelFrom">Partner's Language Level From:</label>
+            <label for="partnerLanguageLevelFrom">Рівень мови партнера Від:</label>
             <select id="partnerLanguageLevelFrom" @onchange="UpdatePartnerLanguageLevelFrom">
                 @foreach (LanguageLvl level in Enum.GetValues(typeof(LanguageLvl)).Cast<LanguageLvl>().Where(l => l <= partnerLanguageLevelTo))
                 {
@@ -240,7 +242,7 @@
             </select>
             <br />
 
-            <label for="partnerLanguageLevelTo">Partner's Language Level To:</label>
+            <label for="partnerLanguageLevelTo">Рівень мови партнера До:</label>
             <select id="partnerLanguageLevelTo" @onchange="UpdatePartnerLanguageLevelTo">
                 @foreach (LanguageLvl level in Enum.GetValues(typeof(LanguageLvl)).Cast<LanguageLvl>().Where(l => l >= partnerLanguageLevelFrom))
                 {
@@ -254,11 +256,11 @@
                 <div class="double-slider">
                     <div class="double-slider">
                         <div>
-                            <label for="ageFrom" style="font-size: 2vh;">Age From: @ageFrom</label>
+                            <label for="ageFrom" style="font-size: 2vh;">Вік від: @ageFrom</label>
                             <input type="range" id="ageFrom" min="18" max="100" value="@ageFrom" @oninput="UpdateAgeFrom" class="slider age-from">
                         </div>
                         <div>
-                            <label for="ageTo" style="font-size: 2vh;">Age To: @ageTo</label>
+                            <label for="ageTo" style="font-size: 2vh;">Вік до: @ageTo</label>
                             <input type="range" id="ageTo" min="18" max="100" value="@ageTo" @oninput="UpdateAgeTo" class="slider age-to">
                         </div>
                     </div>
@@ -267,19 +269,19 @@
             }
 
             <div class="age-checkbox-container">
-                <label>Любой возраст</label>
+                <label>Будь-який вік</label>
                 <input type="checkbox" @bind="anyAgeSelected" />
             </div>
 
-            <label for="gender">Gender:</label>
+            <label for="gender">Стать:</label>
             <select @bind="selectedGender" id="gender">
-                <option value="">Any</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
+                <option value="">Будь-яка</option>
+                <option value="Male">Чоловіча</option>
+                <option value="Female">Жіноча</option>
+                <option value="Other">Інше</option>
             </select>
 
-            <button class="btn btn-primary" @onclick="AdvancedSearchAsync">Search</button>
+            <button class="btn btn-primary" @onclick="AdvancedSearchAsync">Пошук</button>
         </div>
     }
 </div>
@@ -300,7 +302,7 @@
     private LanguageLvl partnerLanguageLevelTo = LanguageLvl.C2;
     private int? ageFrom = 18;
     private int? ageTo = 100;
-    private bool anyAgeSelected = true; // По умолчанию "Любой возраст" выбран
+    private bool anyAgeSelected = true;
     private string selectedGender;
 
 
@@ -379,7 +381,7 @@
 
         if (!knownLanguages.Any() || !wantsToLearnLanguages.Any())
         {
-            searchMessage = "Пожалуйста, добавьте языки, которые вы знаете, и языки, которые хотите изучать.";
+            searchMessage = "Будь ласка, додайте мови, які ви знаєте, і мови, які хочете вивчати.";
             return;
         }
 
@@ -393,7 +395,7 @@
 
         if (searchResults.Count == 0)
         {
-            searchMessage = "No matching users found.";
+            searchMessage = "Не знайдено відповідних партнерів.";
         }
         else
         {
@@ -416,7 +418,7 @@
 
         if (!knownLanguages.Any() || !wantsToLearnLanguages.Any())
         {
-            searchMessage = "Пожалуйста, добавьте языки, которые вы знаете, и языки, которые хотите изучать.";
+            searchMessage = "Будь ласка, додайте мови, які ви знаєте, і мови, які хочете вивчати.";
             return;
         }
 
@@ -475,7 +477,7 @@
 
         if (filteredUsers.Count == 0)
         {
-            searchMessage = "No matching users found.";
+            searchMessage = "Не знайдено відповідних партнерів.";
         }
         else
         {
