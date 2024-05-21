@@ -265,7 +265,7 @@
                                     <option value="Knows">Знаю</option>
                                     <option value="Wants to Learn">Хочу вивчати</option>
                                 </InputSelect>
-                                <label for="language-type" class="form-label">Language Type</label>
+                                <label for="language-type" class="form-label">Тип мови</label>
                                 <ValidationMessage For="() => LanguageInput.LanguageType" class="text-danger" />
                             </div>
                         <div class="form-floating mb-3">
@@ -332,9 +332,9 @@
                         <div class="form-floating mb-3">
                             <InputSelect @bind-Value="ProfileInput.Gender" class="form-control">
                                 <option value="">Оберіть стать</option>
-                                <option value="Male">Чоловіча</option>
-                                <option value="Female">Жіноча</option>
-                                <option value="Other">Інша</option>
+                                <option value="Чоловіча">Чоловіча</option>
+                                <option value="Жіноча">Жіноча</option>
+                                <option value="Інша">Інша</option>
                             </InputSelect>
                             <label for="gender" class="form-label">Стать</label>
                         </div>
@@ -741,48 +741,48 @@
 
     // Список стран для выбора
     private List<string> countries = new List<string>
-{
-    "Albania",
-    "Australia",
-    "Austria",
-    "Belgium",
-    "Brazil",
-    "Bulgaria",
-    "Canada",
-    "China",
-    "Croatia",
-    "Czech Republic",
-    "Denmark",
-    "Egypt",
-    "Finland",
-    "France",
-    "Germany",
-    "Greece",
-    "Hungary",
-    "India",
-    "Ireland",
-    "Italy",
-    "Japan",
-    "Mexico",
-    "Netherlands",
-    "Norway",
-    "Poland",
-    "Portugal",
-    "Romania",
-    "Scotland",
-    "Serbia",
-    "Slovenia",
-    "South Korea",
-    "Spain",
-    "Sweden",
-    "Switzerland",
-    "Thailand",
-    "Turkey",
-    "Ukraine",
-    "United Arab Emirates",
-    "United Kingdom",
-    "United States of America"
-};
+    {
+       "Австралія",
+       "Австрія",
+       "Албанія",
+       "Бельгія",
+       "Болгарія",
+       "Бразилія",
+       "Велика Британія",
+       "Греція",
+       "Данія",
+       "Єгипет",
+       "Індія",
+       "Ірландія",
+       "Іспанія",
+       "Італія",
+       "Канада",
+       "Китай",
+       "Мексика",
+       "Нідерланди",
+       "Німеччина",
+       "Норвегія",
+       "Об'єднані Арабські Емірати",
+       "Південна Корея",
+       "Польща",
+       "Португалія",
+       "Румунія",
+       "Сербія",
+       "Словенія",
+       "Сполучені Штати Америки",
+       "Таїланд",
+       "Туреччина",
+       "Угорщина",
+       "Україна",
+       "Фінляндія",
+       "Франція",
+       "Хорватія",
+       "Чеська Республіка",
+       "Швейцарія",
+       "Швеція",
+       "Шотландія",
+       "Японія"
+    };
 }
 
 <script>

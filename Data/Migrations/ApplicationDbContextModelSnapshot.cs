@@ -129,7 +129,7 @@ namespace LangPrac.Migrations
 
                     b.HasIndex("User2Id");
 
-                    b.ToTable("Chats");
+                    b.ToTable("Chats", (string)null);
                 });
 
             modelBuilder.Entity("LangPrac.Data.ChatMessage", b =>
@@ -163,7 +163,7 @@ namespace LangPrac.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("ChatMessages");
+                    b.ToTable("ChatMessages", (string)null);
                 });
 
             modelBuilder.Entity("LangPrac.Data.Language", b =>
@@ -179,7 +179,7 @@ namespace LangPrac.Migrations
 
                     b.HasKey("LanguageId");
 
-                    b.ToTable("Languages");
+                    b.ToTable("Languages", (string)null);
                 });
 
             modelBuilder.Entity("LangPrac.Data.Notification", b =>
@@ -229,7 +229,7 @@ namespace LangPrac.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("LangPrac.Data.PartnerRating", b =>
@@ -251,7 +251,7 @@ namespace LangPrac.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PartnerRatings");
+                    b.ToTable("PartnerRatings", (string)null);
                 });
 
             modelBuilder.Entity("LangPrac.Data.UserLanguage", b =>
@@ -273,7 +273,7 @@ namespace LangPrac.Migrations
 
                     b.HasIndex("LanguageId");
 
-                    b.ToTable("UserLanguages");
+                    b.ToTable("UserLanguages", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

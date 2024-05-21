@@ -14,17 +14,17 @@ namespace LangPrac.Data
 
     public enum LanguageLvl
     {
-        [EnumMember(Value = "Beginner")]
+        [EnumMember(Value = "Початковий")]
         A1,
-        [EnumMember(Value = "Elementary")]
+        [EnumMember(Value = "Нижче середнього")]
         A2,
-        [EnumMember(Value = "Intermediate")]
+        [EnumMember(Value = "Середній")]
         B1,
-        [EnumMember(Value = "Upper Intermediate")]
+        [EnumMember(Value = "Вище середнього")]
         B2,
-        [EnumMember(Value = "Advanced")]
+        [EnumMember(Value = "Високий")]
         C1,
-        [EnumMember(Value = "Proficient")]
+        [EnumMember(Value = "Професійний")]
         C2
     }
 
