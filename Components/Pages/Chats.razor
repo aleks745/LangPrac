@@ -215,6 +215,13 @@
         .btn-delete:hover {
             background-color: #c82333;
         }
+
+    .empty-chat-message {
+        text-align: center;
+        color: #ffffff;
+        font-size: 2.5vh;
+        margin-top: 20vh;
+    }
 </style>
 
 <div class="chat-list-layout">
@@ -222,20 +229,30 @@
         Chats
     </div>
     <div class="chat-list-container">
-        @foreach (var chat in UserChats)
+        @if (UserChats.Count == 0)
         {
-            <div class="chat-list-item">
-                <div class="chat-content" @onclick="() => NavigateToChat(chat.Id)">
-                    <span>Chat with @GetOtherUserName(chat)</span>
-                    <div class="chat-info">
-                        <span style="font-size: 1.5vh">Created: @chat.CreatedDate.ToString("dd.MM.yyyy")</span>
-                    </div>
-                </div>
-                <button class="delete-chat-button" @onclick:stopPropagation @onclick="() => ShowEndPracticeModal(chat.Id)">Закончить практику</button>
+            <div class="empty-chat-message">
+                Список чатов пуст
             </div>
+        }
+        else
+        {
+            @foreach (var chat in UserChats)
+            {
+                <div class="chat-list-item">
+                    <div class="chat-content" @onclick="() => NavigateToChat(chat.Id)">
+                        <span>Chat with @GetOtherUserName(chat)</span>
+                        <div class="chat-info">
+                            <span style="font-size: 1.5vh">Created: @chat.CreatedDate.ToString("dd.MM.yyyy")</span>
+                        </div>
+                    </div>
+                    <button class="delete-chat-button" @onclick:stopPropagation @onclick="() => ShowEndPracticeModal(chat.Id)">Закончить практику</button>
+                </div>
+            }
         }
     </div>
 </div>
+
 
 <div id="endPracticeModal" class="modal">
     <div class="modal-content">

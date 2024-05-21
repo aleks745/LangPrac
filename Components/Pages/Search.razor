@@ -179,20 +179,38 @@
         font-size: 3.1vh;
         color: #ffffff;
         text-shadow: 0 0 1.3vh rgba(0, 0, 0, 0.7);
-        top: 9vh;
+        margin-bottom: 4vh;
+        text-align: center;
     }
+
+    .description {
+        font-size: 2.4vh;
+        color: #ffffff;
+        text-align: center;
+        margin-bottom: 1.0vh;
+    }
+
+    .styled-button {
+        box-shadow: 0 0.5vh 1vh rgba(0, 0, 0, 0.2);
+    }
+
+        .styled-button:hover {
+            box-shadow: 0 0.8vh 1.2vh rgba(0, 0, 0, 0.3);
+        }
 </style>
 
 @attribute [Authorize]
 
 <div class="search-container">
-    <h3 class="mlabel">Search</h3>
     @if (quickSearchVisible)
     {
-        <button class="btn btn-primary" @onclick="QuickSearchAsync">Quick Search</button>
+        <h3 class="mlabel">Пошук</h3>
+        <div class="description" style="padding-top: 2vh">Быстрый подбор партнера исходя из ваших настроек</div>
+        <button class="btn btn-primary styled-button" @onclick="QuickSearchAsync">Quick Search</button>
+        <div class="description" style="padding-top: 2vh">Расширенный поиск по различным критериям и фильтрам</div>
     }
 
-    <button class="btn btn-primary" @onclick="ToggleAdvancedSearch">Advanced Search</button>
+    <button class="btn btn-primary styled-button" @onclick="ToggleAdvancedSearch">Advanced Search</button>
 
     @if (!string.IsNullOrEmpty(searchMessage))
     {
