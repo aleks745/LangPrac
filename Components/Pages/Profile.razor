@@ -268,17 +268,17 @@
                                 <label for="language-type" class="form-label">Language Type</label>
                                 <ValidationMessage For="() => LanguageInput.LanguageType" class="text-danger" />
                             </div>
-                            <div class="form-floating mb-3">
-                                <InputSelect @bind-Value="LanguageInput.LanguageId" class="form-control">
-                                    <option value="">Select a language</option>
-                                    @foreach (var language in languages)
-                                    {
-                                        <option value="@language.LanguageId">@language.LanguageName</option>
-                                    }
-                                </InputSelect>
-                                <label for="language" class="form-label">Language</label>
-                                <ValidationMessage For="() => LanguageInput.LanguageId" class="text-danger" />
-                            </div>
+                        <div class="form-floating mb-3">
+                            <InputSelect @bind-Value="LanguageInput.LanguageId" class="form-control">
+                                <option value="">Select a language</option>
+                                @foreach (var language in languages)
+                                {
+                                    <option value="@language.LanguageId">@language.LanguageName</option>
+                                }
+                            </InputSelect>
+                            <label for="language" class="form-label">Language</label>
+                            <ValidationMessage For="() => LanguageInput.LanguageId" class="text-danger" />
+                        </div>
                             <div class="form-floating mb-3">
                                 <select @bind="selectedLanguageLvl" class="form-control">
                                     @foreach (var lvl in Enum.GetValues(typeof(LanguageLvl)))
@@ -314,7 +314,8 @@
                             <ValidationMessage For="() => ProfileInput.PhoneNumber" class="text-danger" />
                         </div>
                         <div class="form-floating mb-3">
-                            <InputDate @bind-Value="ProfileInput.DateOfBirth" class="form-control" placeholder="Please enter your date of birth." />
+                            <InputDate @bind-Value="ProfileInput.DateOfBirth" class="form-control" placeholder="Please enter your date of birth."
+                                       Min="@DateTime.Now.AddYears(-80).ToString("yyyy-MM-dd")" Max="@DateTime.Now.AddYears(-18).ToString("yyyy-MM-dd")" />
                             <label for="date-of-birth" class="form-label">Date of birth</label>
                             <ValidationMessage For="() => ProfileInput.DateOfBirth" class="text-danger" />
                         </div>
@@ -522,6 +523,13 @@
             return;
         }
 
+        var userWithNewEmail = await UserManager.FindByEmailAsync(EmailInput.NewEmail);
+        if (userWithNewEmail != null)
+        {
+            emailMessage = "Email is already in use.";
+            return;
+        }
+
         // Просто обновляйте электронную почту без отправки подтверждения
         user.Email = EmailInput.NewEmail;
         await UserManager.UpdateAsync(user);
@@ -577,6 +585,12 @@
             .Where(ul => ul.UserId == user.Id)
             .Include(ul => ul.Language)
             .ToListAsync();
+
+        // Сортировка языков пользователя по типу (сначала те, которые знает, потом те, которые хочет учить)
+        userLanguages = userLanguages
+            .OrderByDescending(ul => ul.LanguageType == "Knows")
+            .ThenBy(ul => ul.Language.LanguageName)
+            .ToList();
     }
 
     private async Task DeleteUserLanguageAsync(UserLanguage userLanguage)

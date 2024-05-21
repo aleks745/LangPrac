@@ -214,8 +214,8 @@
             <br />
 
             <label for="partnerLanguageLevelFrom">Partner's Language Level From:</label>
-            <select id="partnerLanguageLevelFrom" @bind="partnerLanguageLevelFrom">
-                @foreach (LanguageLvl level in Enum.GetValues(typeof(LanguageLvl)))
+            <select id="partnerLanguageLevelFrom" @onchange="UpdatePartnerLanguageLevelFrom">
+                @foreach (LanguageLvl level in Enum.GetValues(typeof(LanguageLvl)).Cast<LanguageLvl>().Where(l => l <= partnerLanguageLevelTo))
                 {
                     <option value="@level" selected="@(level == partnerLanguageLevelFrom)">@level.GetDescription()</option>
                 }
@@ -223,8 +223,8 @@
             <br />
 
             <label for="partnerLanguageLevelTo">Partner's Language Level To:</label>
-            <select id="partnerLanguageLevelTo" @bind="partnerLanguageLevelTo">
-                @foreach (LanguageLvl level in Enum.GetValues(typeof(LanguageLvl)))
+            <select id="partnerLanguageLevelTo" @onchange="UpdatePartnerLanguageLevelTo">
+                @foreach (LanguageLvl level in Enum.GetValues(typeof(LanguageLvl)).Cast<LanguageLvl>().Where(l => l >= partnerLanguageLevelFrom))
                 {
                     <option value="@level" selected="@(level == partnerLanguageLevelTo)">@level.GetDescription()</option>
                 }
@@ -307,6 +307,26 @@
         showAdvancedSearch = !showAdvancedSearch;
         quickSearchVisible = !quickSearchVisible;
         searchMessage = null;
+    }
+
+    private void UpdatePartnerLanguageLevelFrom(ChangeEventArgs e)
+    {
+        partnerLanguageLevelFrom = (LanguageLvl)Enum.Parse(typeof(LanguageLvl), e.Value.ToString());
+        if (partnerLanguageLevelFrom > partnerLanguageLevelTo)
+        {
+            partnerLanguageLevelTo = partnerLanguageLevelFrom;
+        }
+        StateHasChanged();
+    }
+
+    private void UpdatePartnerLanguageLevelTo(ChangeEventArgs e)
+    {
+        partnerLanguageLevelTo = (LanguageLvl)Enum.Parse(typeof(LanguageLvl), e.Value.ToString());
+        if (partnerLanguageLevelTo < partnerLanguageLevelFrom)
+        {
+            partnerLanguageLevelFrom = partnerLanguageLevelTo;
+        }
+        StateHasChanged();
     }
 
     private void UpdateAgeFrom(ChangeEventArgs e)
