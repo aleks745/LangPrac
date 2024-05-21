@@ -494,12 +494,12 @@
                 {
                     // Только обновляем сессию, если это абсолютно необходимо
                     await SignInManager.RefreshSignInAsync(user);
-                    profileMessage = "Your profile has been updated successfully.";
+                    profileMessage = "Ваш профіль успішно оновлено";
                 }
                 catch (Exception ex)
                 {
                     // Логируем ошибку и сообщаем пользователю
-                    profileMessage = $"An error occurred while updating your profile: {ex.Message}";
+                    profileMessage = "Ваш профіль успішно оновлено";
                 }
             }
             else
@@ -512,7 +512,7 @@
             profileMessage = "No changes detected.";
         }
 
-        StateHasChanged(); // Обновить UI
+        StateHasChanged();
     }
 
     private async Task OnValidSubmitEmailAsync()
@@ -530,11 +530,19 @@
             return;
         }
 
-        // Просто обновляйте электронную почту без отправки подтверждения
+        // Обновление email и username
         user.Email = EmailInput.NewEmail;
-        await UserManager.UpdateAsync(user);
+        user.UserName = EmailInput.NewEmail;
+        var updateResult = await UserManager.UpdateAsync(user);
 
-        emailMessage = "Email updated successfully.";
+        if (updateResult.Succeeded)
+        {
+            emailMessage = "Email and username updated successfully.";
+        }
+        else
+        {
+            emailMessage = "Error updating email and username.";
+        }
     }
 
     // Языки

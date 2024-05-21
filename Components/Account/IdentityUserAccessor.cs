@@ -20,7 +20,7 @@ namespace LangPrac.Components.Account
 
             if (user is null)
             {
-                _redirectManager.RedirectToWithStatus("Account/Login", $"Error: Unable to load user with ID '{_userManager.GetUserId(context.User)}'.", context);
+                _redirectManager.RedirectTo("Account/Login");
             }
 
             return user;
