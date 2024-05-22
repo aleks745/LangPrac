@@ -276,9 +276,9 @@
             <label for="gender">Стать:</label>
             <select @bind="selectedGender" id="gender">
                 <option value="">Будь-яка</option>
-                <option value="Male">Чоловіча</option>
-                <option value="Female">Жіноча</option>
-                <option value="Other">Інше</option>
+                <option value="Чоловіча">Чоловіча</option>
+                <option value="Жіноча">Жіноча</option>
+                <option value="Інше">Інше</option>
             </select>
 
             <button class="btn btn-primary" @onclick="AdvancedSearchAsync">Пошук</button>
@@ -472,7 +472,7 @@
         }
         else if (selectedGender == "Any")
         {
-            filteredUsers = filteredUsers.Where(u => string.IsNullOrEmpty(u.Gender) || u.Gender == "Unknown" || u.Gender == "Male" || u.Gender == "Female" || u.Gender == "Other").ToList();
+            filteredUsers = filteredUsers.Where(u => string.IsNullOrEmpty(u.Gender) || u.Gender == "Unknown" || u.Gender == "Чоловіча" || u.Gender == "Жіноча" || u.Gender == "Інше").ToList();
         }
 
         if (filteredUsers.Count == 0)
