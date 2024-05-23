@@ -275,7 +275,7 @@
                 @if (UserChats.Any(c => (c.User1Id == CurrentUser.Id && c.User2Id == UserManager.GetUserId(authState.User)) ||
                (c.User2Id == CurrentUser.Id && c.User1Id == UserManager.GetUserId(authState.User))))
                 {
-                    <span>Чат із цим користувачем уже існує</span>
+                    <span>Чат уже існує</span>
                 }
                 else if (invitationSent.ContainsKey(CurrentUser?.Id) && invitationSent[CurrentUser.Id])
                 {

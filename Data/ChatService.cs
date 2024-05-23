@@ -124,7 +124,6 @@ namespace LangPrac.Services
 
             var userInfo = $"Вік: {CalculateAge(sender.DateOfBirth)}, Країна: {sender.Country}, Стать: {sender.Gender}";
 
-            // Создаем подробное уведомление для получателя
             var notificationForReceiver = new Notification
             {
                 SenderId = sender.Id,
@@ -134,7 +133,6 @@ namespace LangPrac.Services
                 UserInfo = userInfo,
             };
 
-            // Создаем уведомление для отправителя
             var notificationForSender = new Notification
             {
                 SenderId = sender.Id,
