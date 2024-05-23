@@ -314,7 +314,13 @@
     protected override async Task OnInitializedAsync()
     {
         var httpContext = HttpContextAccessor.HttpContext;
-        if (httpContext.User.Identity.IsAuthenticated)
+
+        if (httpContext == null)
+        {
+            throw new InvalidOperationException("HttpContext is null.");
+        }
+
+        if (httpContext.User.Identity?.IsAuthenticated == true)
         {
             CurrentUserId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (CurrentUserId != null)

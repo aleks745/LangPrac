@@ -332,14 +332,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (HttpContext == null)
+        var httpContext = HttpContextAccessor.HttpContext;
+
+        if (httpContext == null)
         {
-            HttpContext = HttpContextAccessor.HttpContext;
+            throw new InvalidOperationException("HttpContext is null.");
         }
 
-        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        user = await UserAccessor.GetRequiredUserAsync(httpContext);
         username = await UserManager.GetUserNameAsync(user);
-        var currentUserId = UserManager.GetUserId(HttpContext.User);
+        var currentUserId = UserManager.GetUserId(httpContext.User);
 
         await LoadUserNotificationsAsync();
     }

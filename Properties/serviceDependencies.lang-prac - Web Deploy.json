@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "signalr1": {
+      "serviceConnectorResourceId": "/subscriptions/[parameters('subscriptionId')]/resourcegroups/[parameters('resourceGroupName')]/providers/Microsoft.Web/sites/lang-prac/providers/Microsoft.ServiceLinker/linkers/AzureSignalRConnectionString_BC706C4755",
+      "secretStore": "AzureAppSettings",
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.SignalRService/SignalR/LangPracSignalR",
+      "type": "signalr.azure",
+      "connectionId": "Azure:SignalR:ConnectionString",
+      "dynamicId": null
+    },
+    "mssql1": {
+      "serviceConnectorResourceId": "/subscriptions/[parameters('subscriptionId')]/resourcegroups/[parameters('resourceGroupName')]/providers/Microsoft.Web/sites/lang-prac/providers/Microsoft.ServiceLinker/linkers/ConnectionStringsLangPrac_42E8E32668",
+      "secretStore": "AzureAppSettings",
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourcegroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/langpracdbserver/databases/LangPrac_db",
+      "type": "mssql.azure",
+      "connectionId": "ConnectionStrings:LangPrac",
+      "dynamicId": null
+    }
+  }
+}

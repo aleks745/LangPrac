@@ -7,7 +7,7 @@
 @inject IdentityUserAccessor UserAccessor
 @inject IHttpContextAccessor HttpContextAccessor
 
-<PageTitle>LаngPrac</PageTitle>
+<PageTitle>LangPrac</PageTitle>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
@@ -100,16 +100,22 @@
     private string? username;
 
     [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
+    private HttpContext? HttpContext { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         if (HttpContext == null)
         {
-            HttpContext = HttpContextAccessor.HttpContext;
+            throw new InvalidOperationException("HttpContext is null.");
         }
 
         user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+
+        if (user == null)
+        {
+            return;
+        }
+
         username = await UserManager.GetUserNameAsync(user);
     }
 }
