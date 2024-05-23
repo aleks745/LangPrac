@@ -15,7 +15,7 @@
 @inject IdentityRedirectManager RedirectManager
 @inject ApplicationDbContext DbContext
 @inject NavigationManager NavigationManager
-@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JSRuntime
 
 <style>
@@ -261,7 +261,6 @@
         {
             <div class="notification" data-status="@notification.Status">
                 <p>@notification.Message</p>
-                <p class="timestamp">Sent: @notification.CreatedAt.ToLocalTime().ToString("g")</p>
                 @if (!string.IsNullOrEmpty(notification.UserLanguagesInfo))
                 {
                     <p>@notification.UserLanguagesInfo</p>
@@ -286,6 +285,7 @@
                     <button class="btn btn-success" @onclick="() => AcceptInvite(notification.Id)">Прийняти заявку</button>
                     <button class="btn btn-danger" @onclick="() => DeclineInvite(notification)">Відхилити заявку</button>
                 }
+                <p class="timestamp">Відправлено: @notification.CreatedAt.ToLocalTime().AddHours(3).ToString("g")</p>
             </div>
         }
     }
@@ -327,21 +327,19 @@
     private string CurrentPartnerId;
     private HashSet<int> RatedNotifications = new HashSet<int>();
 
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        var httpContext = HttpContextAccessor.HttpContext;
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
 
-        if (httpContext == null)
+        if (user.Identity?.IsAuthenticated != true)
         {
-            throw new InvalidOperationException("HttpContext is null.");
+            throw new InvalidOperationException("User is not authenticated.");
         }
 
-        user = await UserAccessor.GetRequiredUserAsync(httpContext);
-        username = await UserManager.GetUserNameAsync(user);
-        var currentUserId = UserManager.GetUserId(httpContext.User);
+        var appUser = await UserManager.GetUserAsync(user);
+        username = await UserManager.GetUserNameAsync(appUser);
+        var currentUserId = UserManager.GetUserId(user);
 
         await LoadUserNotificationsAsync();
     }
@@ -356,13 +354,12 @@
         var notification = await DbContext.Notifications.FindAsync(notificationId);
         if (notification != null)
         {
-            var chatService = HttpContext.RequestServices.GetRequiredService<IChatService>();
-            var chat = await chatService.CreateChatAsync(notification.SenderId, notification.ReceiverId);
+            var chat = await ChatService.CreateChatAsync(notification.SenderId, notification.ReceiverId);
             notification.Status = "Accepted";
 
             await DbContext.SaveChangesAsync();
 
-            await chatService.CreateChatConfirmationNotification(notification.ReceiverId, notification.SenderId);
+            await ChatService.CreateChatConfirmationNotification(notification.ReceiverId, notification.SenderId);
 
             NavigationManager.NavigateTo($"/chat/{chat.Id}");
         }
@@ -388,10 +385,12 @@
 
     private async Task DeleteAllNotifications()
     {
-        var currentUserId = UserManager.GetUserId(HttpContext.User);
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var currentUserId = UserManager.GetUserId(user);
+
         if (string.IsNullOrEmpty(currentUserId))
         {
-            // Log error or handle the case where the user ID is not available
             Console.WriteLine("Error: User ID is null or empty.");
             return;
         }
@@ -410,14 +409,13 @@
         {
             if (notification.Status == "Pending")
             {
-                // Automatically decline the invite if it's pending
                 var declineNotification = new Notification
                     {
                         SenderId = notification.ReceiverId,
                         ReceiverId = notification.SenderId,
                         Message = $"Ваше запрошення до {UserManager.FindByIdAsync(notification.ReceiverId).Result.UserName} було відхилено.",
                         Status = "Declined",
-                        UserInfo = string.Empty // Ensure UserInfo is not null
+                        UserInfo = string.Empty
                     };
                 DbContext.Notifications.Add(declineNotification);
             }
@@ -436,7 +434,10 @@
 
     private async Task LoadUserNotificationsAsync()
     {
-        var currentUserId = UserManager.GetUserId(HttpContext.User);
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var currentUserId = UserManager.GetUserId(user);
+
         NotificationList = await DbContext.Notifications
             .Where(n => n.ReceiverId == currentUserId)
             .OrderByDescending(n => n.CreatedAt)
@@ -453,7 +454,7 @@
     private void ShowRatePartnerModal(string partnerId, int notificationId)
     {
         CurrentPartnerId = partnerId;
-        CurrentNotificationId = notificationId; // Сохраняем идентификатор текущего уведомления
+        CurrentNotificationId = notificationId;
         var modal = JSRuntime.InvokeVoidAsync("eval", "document.getElementById('ratePartnerModal').style.display='block'");
     }
 

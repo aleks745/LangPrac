@@ -10,7 +10,7 @@
 @inject IChatService ChatService
 @inject UserManager<ApplicationUser> UserManager
 @inject NavigationManager NavigationManager
-@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthenticationStateProvider
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
 
@@ -387,19 +387,19 @@
                         <span class="msg_time">
                             @if (message.Timestamp.Date == DateTime.UtcNow.Date)
                             {
-                                <text>@message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                                <text>@message.Timestamp.ToLocalTime().AddHours(3).ToString("HH:mm")</text>
                             }
                             else if (message.Timestamp.Date == DateTime.UtcNow.Date.AddDays(-1))
                             {
-                                <text>Вчора @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                                <text>Вчора @message.Timestamp.ToLocalTime().AddHours(3).ToString("HH:mm")</text>
                             }
                             else if (message.Timestamp.Date == DateTime.UtcNow.Date.AddDays(-2))
                             {
-                                <text>Позавчора @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                                <text>Позавчора @message.Timestamp.ToLocalTime().AddHours(3).ToString("HH:mm")</text>
                             }
                             else
                             {
-                                <text>@message.Timestamp.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</text>
+                                <text>@message.Timestamp.ToLocalTime().AddHours(3).ToString("dd.MM.yyyy HH:mm")</text>
                             }
                         </span>
                         }
@@ -408,19 +408,19 @@
                             <span class="msg_time_send">
                                 @if (message.Timestamp.Date == DateTime.UtcNow.Date)
                                 {
-                                    <text>@message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                                    <text>@message.Timestamp.ToLocalTime().AddHours(3).ToString("HH:mm")</text>
                                 }
                                 else if (message.Timestamp.Date == DateTime.UtcNow.Date.AddDays(-1))
                                 {
-                                    <text>Вчора @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                                    <text>Вчора @message.Timestamp.ToLocalTime().AddHours(3).ToString("HH:mm")</text>
                                 }
                                 else if (message.Timestamp.Date == DateTime.UtcNow.Date.AddDays(-2))
                                 {
-                                    <text>Позавчора @message.Timestamp.ToLocalTime().ToString("HH:mm")</text>
+                                    <text>Позавчора @message.Timestamp.ToLocalTime().AddHours(3).ToString("HH:mm")</text>
                                 }
                                 else
                                 {
-                                    <text>@message.Timestamp.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</text>
+                                    <text>@message.Timestamp.ToLocalTime().AddHours(3).ToString("dd.MM.yyyy HH:mm")</text>
                                 }
                             </span>
                         }
@@ -507,78 +507,88 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var httpContext = HttpContextAccessor.HttpContext;
-        if (httpContext.User.Identity.IsAuthenticated)
-        {
-            CurrentUserId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
 
-            hubConnection = new HubConnectionBuilder()
-                .WithUrl(NavigationManager.ToAbsoluteUri("/chathub"))
-                .Build();
-
-            hubConnection.On<string, string>("ReceiveMessage", async (userId, message) =>
-            {
-                var sender = await UserManager.FindByIdAsync(userId);
-                var msg = new ChatMessage
-                    {
-                        SenderId = userId,
-                        Content = message,
-                        Timestamp = DateTime.UtcNow,
-                        Sender = sender
-                    };
-
-                await InvokeAsync(() =>
-                {
-                    Messages.Add(msg);
-                    StateHasChanged();
-                });
-
-                await JSRuntime.InvokeVoidAsync("scrollToBottom");
-
-                if (userId != CurrentUserId)
-                {
-                    await hubConnection.InvokeAsync("MarkMessageAsRead", int.Parse(ChatId), userId);
-                }
-            });
-
-            hubConnection.On<string>("MessagesRead", async userId =>
-            {
-                await InvokeAsync(() =>
-                {
-                    foreach (var message in Messages.Where(m => m.SenderId != userId))
-                    {
-                        message.IsRead = true;
-                    }
-                    StateHasChanged();
-                });
-            });
-
-            await hubConnection.StartAsync();
-            await hubConnection.InvokeAsync("JoinChat", int.Parse(ChatId));
-
-            var chat = await ChatService.GetChatAsync(int.Parse(ChatId), CurrentUserId);
-            Messages = chat.Messages.ToList();
-
-            var partner = chat.User1Id == CurrentUserId ? chat.User2 : chat.User1;
-            PartnerName = partner?.Nickname ?? "Chat";
-            PartnerId = partner?.Id;
-
-            StateHasChanged();
-            await hubConnection.InvokeAsync("MarkMessageAsRead", int.Parse(ChatId), CurrentUserId);
-        }
-        else
+        if (user.Identity?.IsAuthenticated != true)
         {
             NavigationManager.NavigateTo("/");
+            return;
         }
+
+        CurrentUserId = user.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/chathub"))
+            .Build();
+
+        hubConnection.On<string, string>("ReceiveMessage", async (userId, message) =>
+        {
+            var sender = await UserManager.FindByIdAsync(userId);
+            var msg = new ChatMessage
+                {
+                    SenderId = userId,
+                    Content = message,
+                    Timestamp = DateTime.UtcNow,
+                    Sender = sender
+                };
+
+            await InvokeAsync(() =>
+            {
+                Messages.Add(msg);
+                StateHasChanged();
+            });
+
+            await JSRuntime.InvokeVoidAsync("scrollToBottom");
+
+            if (userId != CurrentUserId)
+            {
+                await hubConnection.InvokeAsync("MarkMessageAsRead", int.Parse(ChatId), userId);
+            }
+        });
+
+        hubConnection.On<string>("MessagesRead", async userId =>
+        {
+            await InvokeAsync(() =>
+            {
+                foreach (var message in Messages.Where(m => m.SenderId != userId))
+                {
+                    message.IsRead = true;
+                }
+                StateHasChanged();
+            });
+        });
+
+        await hubConnection.StartAsync();
+        await hubConnection.InvokeAsync("JoinChat", int.Parse(ChatId));
+
+        var chat = await ChatService.GetChatAsync(int.Parse(ChatId), CurrentUserId);
+        Messages = chat.Messages.ToList();
+
+        var partner = chat.User1Id == CurrentUserId ? chat.User2 : chat.User1;
+        PartnerName = partner?.Nickname ?? "Chat";
+        PartnerId = partner?.Id;
+
+        StateHasChanged();
+        await hubConnection.InvokeAsync("MarkMessageAsRead", int.Parse(ChatId), CurrentUserId);
     }
 
-    private async Task SendMessage()
+    [JSInvokable]
+    public async Task SendMessage()
     {
         if (!string.IsNullOrWhiteSpace(NewMessage))
         {
-            await hubConnection.InvokeAsync("SendMessage", int.Parse(ChatId), CurrentUserId, NewMessage);
-            NewMessage = string.Empty;
-            await ScrollToBottom();
+            try
+            {
+                await hubConnection.InvokeAsync("SendMessage", int.Parse(ChatId), CurrentUserId, NewMessage);
+                NewMessage = string.Empty;
+                await ScrollToBottom();
+            }
+            catch (Exception ex)
+            {
+                // Если произошла ошибка, перенаправляем на страницу уведомлений
+                NavigationManager.NavigateTo("/notifications");
+            }
         }
     }
 
@@ -619,7 +629,7 @@
     {
         var chat = await ChatService.GetChatAsync(int.Parse(ChatId), CurrentUserId);
         var partnerId = chat.User1Id == CurrentUserId ? chat.User2Id : chat.User1Id;
-        await ChatService.RatePartnerAsync(partnerId, SelectedRating, 0); // Передаем 0, если нет уведомления
+        await ChatService.RatePartnerAsync(partnerId, SelectedRating, 0);
         IsPartnerRated = true;
         CloseRatePartnerModal();
         await DeleteChat();

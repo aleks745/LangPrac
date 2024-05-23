@@ -6,7 +6,7 @@
 @inject NavigationManager NavigationManager
 @inject ApplicationDbContext DbContext
 @inject IChatService ChatService
-@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JSRuntime
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -313,24 +313,19 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var httpContext = HttpContextAccessor.HttpContext;
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
 
-        if (httpContext == null)
-        {
-            throw new InvalidOperationException("HttpContext is null.");
-        }
-
-        if (httpContext.User.Identity?.IsAuthenticated == true)
-        {
-            CurrentUserId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (CurrentUserId != null)
-            {
-                UserChats = await ChatService.GetUserChatsAsync(CurrentUserId) ?? new List<Chat>();
-            }
-        }
-        else
+        if (user.Identity?.IsAuthenticated != true)
         {
             NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        CurrentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (CurrentUserId != null)
+        {
+            UserChats = await ChatService.GetUserChatsAsync(CurrentUserId) ?? new List<Chat>();
         }
     }
 
@@ -373,6 +368,15 @@
 
     private async Task SubmitRating()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
         var chat = await ChatService.GetChatAsync(ChatIdToDelete, CurrentUserId);
         var partnerId = chat.User1Id == CurrentUserId ? chat.User2Id : chat.User1Id;
         await ChatService.RatePartnerAsync(partnerId, SelectedRating, 0);
@@ -381,7 +385,6 @@
         await DeleteChat(ChatIdToDelete);
     }
 
-
     private void UpgradeLanguageLevel()
     {
         NavigationManager.NavigateTo("/profile");
@@ -389,11 +392,30 @@
 
     private async Task ConfirmDeleteChat()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
         await DeleteChat(ChatIdToDelete);
     }
 
+
     private async Task DeleteChat(int chatId)
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
         var chat = await ChatService.GetChatAsync(chatId, CurrentUserId);
         var partnerId = chat.User1Id == CurrentUserId ? chat.User2Id : chat.User1Id;
 
@@ -407,4 +429,5 @@
         CloseEndPracticeModal();
         StateHasChanged();
     }
+
 }

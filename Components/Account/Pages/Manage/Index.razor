@@ -68,11 +68,11 @@
         var updateResult = await UserManager.UpdateAsync(user);
         if (!updateResult.Succeeded)
         {
-            RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to update the user.", HttpContext);
+            return;
         }
 
         await SignInManager.RefreshSignInAsync(user);
-        RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+        return;
     }
 
     private sealed class InputModel

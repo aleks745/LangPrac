@@ -8,7 +8,7 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject NavigationManager NavigationManager
 @inject ApplicationDbContext DbContext
-@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <style>
     body {
@@ -272,8 +272,8 @@
                         <span>Немає оцінок</span>
                     }
                 </div>
-                @if (UserChats.Any(c => (c.User1Id == CurrentUser.Id && c.User2Id == UserManager.GetUserId(HttpContext.User)) ||
-               (c.User2Id == CurrentUser.Id && c.User1Id == UserManager.GetUserId(HttpContext.User))))
+                @if (UserChats.Any(c => (c.User1Id == CurrentUser.Id && c.User2Id == UserManager.GetUserId(authState.User)) ||
+               (c.User2Id == CurrentUser.Id && c.User1Id == UserManager.GetUserId(authState.User))))
                 {
                     <span>Чат із цим користувачем уже існує</span>
                 }
@@ -298,10 +298,8 @@
     [Parameter]
     public string UserIds { get; set; } = string.Empty;
 
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
     private List<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
+    private AuthenticationState authState;
     private List<Chat> UserChats = new List<Chat>();
     private Dictionary<string, bool> invitationSent = new Dictionary<string, bool>();
 
@@ -312,13 +310,15 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (HttpContext == null)
+        authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
         {
-            HttpContext = HttpContextAccessor.HttpContext;
+            throw new InvalidOperationException("User is not authenticated.");
         }
 
-        var chatService = HttpContext.RequestServices.GetRequiredService<IChatService>();
-        UserChats = await chatService.GetUserChatsAsync(UserManager.GetUserId(HttpContext.User));
+        UserChats = await chatService.GetUserChatsAsync(UserManager.GetUserId(user));
 
         var userIdList = UserIds.Split(',').ToList();
         isLoading = true;
@@ -327,7 +327,7 @@
         await Task.Delay(1500);
 
         Users = await DbContext.Users
-            .Where(u => userIdList.Contains(u.Id) && u.Id != UserManager.GetUserId(HttpContext.User))
+            .Where(u => userIdList.Contains(u.Id) && u.Id != UserManager.GetUserId(user))
             .Include(u => u.UserLanguages)
             .Include(u => u.UserRatings)
             .ToListAsync();
@@ -393,11 +393,11 @@
 
     private async Task SendInvite(ApplicationUser user)
     {
+        var currentUser = await UserManager.GetUserAsync(authState.User);
+
         if (!invitationSent.ContainsKey(user.Id) || !invitationSent[user.Id])
         {
-            var currentUser = await UserManager.GetUserAsync(HttpContext.User);
             await chatService.SendInviteWithDetails(currentUser, user);
-
             invitationSent[user.Id] = true;
         }
     }

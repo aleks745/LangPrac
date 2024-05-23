@@ -13,7 +13,7 @@
 @inject IdentityRedirectManager RedirectManager
 @inject ApplicationDbContext DbContext
 @inject NavigationManager NavigationManager
-@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <style>
     .page {
@@ -291,9 +291,6 @@
     private string? username;
     private List<UserLanguage> userLanguages = new List<UserLanguage>();
 
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
     private string searchMessage = "";
     private bool showAdvancedSearch = false;
     private bool quickSearchVisible = true;
@@ -305,20 +302,28 @@
     private bool anyAgeSelected = true;
     private string selectedGender;
 
-
     protected override async Task OnInitializedAsync()
     {
-        if (HttpContext == null)
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
         {
-            HttpContext = HttpContextAccessor.HttpContext;
+            throw new InvalidOperationException("User is not authenticated.");
         }
 
-        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-        username = await UserManager.GetUserNameAsync(user);
+        var appUser = await UserManager.GetUserAsync(user);
+        if (appUser == null)
+        {
+            searchMessage = "Користувач не знайдений.";
+            return;
+        }
+
+        username = await UserManager.GetUserNameAsync(appUser);
 
         userLanguages = await DbContext.UserLanguages
             .Include(ul => ul.Language)
-            .Where(ul => ul.UserId == user.Id)
+            .Where(ul => ul.UserId == appUser.Id)
             .ToListAsync();
     }
 
@@ -369,6 +374,22 @@
 
     private async Task QuickSearchAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            searchMessage = "Користувач не автентифікований.";
+            return;
+        }
+
+        var appUser = await UserManager.GetUserAsync(user);
+        if (appUser == null)
+        {
+            searchMessage = "Користувач не знайдений.";
+            return;
+        }
+
         var knownLanguages = userLanguages
             .Where(ul => ul.LanguageType == "Knows")
             .Select(ul => ul.LanguageId)
@@ -386,7 +407,7 @@
         }
 
         var searchResults = await DbContext.Users
-            .Where(u => u.Id != user.Id)
+            .Where(u => u.Id != appUser.Id)
             .Where(u => u.UserLanguages.Any(ul =>
                 wantsToLearnLanguages.Contains(ul.LanguageId) && ul.LanguageType == "Knows") &&
                 u.UserLanguages.Any(ul =>
@@ -406,6 +427,22 @@
 
     private async Task AdvancedSearchAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            searchMessage = "Користувач не автентифікований.";
+            return;
+        }
+
+        var appUser = await UserManager.GetUserAsync(user);
+        if (appUser == null)
+        {
+            searchMessage = "Користувач не знайдений.";
+            return;
+        }
+
         var knownLanguages = userLanguages
             .Where(ul => ul.LanguageType == "Knows")
             .Select(ul => ul.LanguageId)
@@ -426,7 +463,7 @@
 
         var allUsers = await DbContext.Users
             .Include(u => u.UserLanguages)
-            .Where(u => u.Id != user.Id)
+            .Where(u => u.Id != appUser.Id)
             .ToListAsync();
 
         var filteredUsers = allUsers
@@ -436,7 +473,7 @@
                                                   ul.LanguageLvl <= partnerLanguageLevelTo))
             .ToList();
 
-        var userKnowsLanguages = user.UserLanguages
+        var userKnowsLanguages = appUser.UserLanguages
             .Where(ul => ul.LanguageType == "Knows")
             .Select(ul => ul.LanguageId)
             .ToList();

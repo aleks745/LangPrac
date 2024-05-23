@@ -5,7 +5,7 @@
 @using LangPrac.Components.Account
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityUserAccessor UserAccessor
-@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>LangPrac</PageTitle>
 
@@ -99,23 +99,23 @@
     private ApplicationUser user = default!;
     private string? username;
 
-    [CascadingParameter]
-    private HttpContext? HttpContext { get; set; }
-
     protected override async Task OnInitializedAsync()
     {
-        if (HttpContext == null)
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
         {
-            throw new InvalidOperationException("HttpContext is null.");
+            throw new InvalidOperationException("User is not authenticated.");
         }
 
-        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        var appUser = await UserManager.GetUserAsync(user);
 
-        if (user == null)
+        if (appUser == null)
         {
             return;
         }
 
-        username = await UserManager.GetUserNameAsync(user);
+        username = await UserManager.GetUserNameAsync(appUser);
     }
 }

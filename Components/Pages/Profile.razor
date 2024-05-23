@@ -17,7 +17,7 @@
 @inject IdentityRedirectManager RedirectManager
 @inject ApplicationDbContext DbContext
 @inject IEmailSender<ApplicationUser> EmailSender
-@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JS
 @inject ILogger<ChangePassword> Logger
@@ -192,15 +192,15 @@
 
 <div class="ppage">
     <div class="content-container">
-        @if (user != null)
+        @if (appUser != null)
         {
             <div class="elements">
                 <div class="row">
-                    <h4>@user.Nickname</h4>
+                    <h4>@appUser.Nickname</h4>
                     <div class="avatar-container">
-                        @if (user.AvatarImage is not null)
+                        @if (appUser.AvatarImage is not null)
                         {
-                            <img src="@($"data:image/jpeg;base64,{Convert.ToBase64String(user.AvatarImage)}")" alt="Avatar" class="avatar-image" />
+                            <img src="@($"data:image/jpeg;base64,{Convert.ToBase64String(appUser.AvatarImage)}")" alt="Avatar" class="avatar-image" />
                         }
                         else
                         {
@@ -211,14 +211,14 @@
                         <InputFile OnChange="@LoadAvatar" accept="image/*" class="avatar-input" />
                     </div>
                     <div class="rating">
-                        @if (user.AverageRating == 0)
+                        @if (appUser.AverageRating == 0)
                         {
                             <h5>Користувача ще ніхто не оцінив</h5>
                         }
                         else
                         {
-                            <h5>Рейтинг: @user.AverageRating</h5>
-                            <h5>Кількість оцінок: @user.UserRatings.Count</h5>
+                            <h5>Рейтинг: @appUser.AverageRating</h5>
+                            <h5>Кількість оцінок: @appUser.UserRatings.Count</h5>
                         }
                     </div>
                 </div>
@@ -407,7 +407,7 @@
 </div>
 
 @code {
-    private ApplicationUser user = default!;
+    private ApplicationUser appUser = default!;
     private string? username;
     private string? nickname;
     private string? phoneNumber;
@@ -416,9 +416,6 @@
     private string? emailMessage;
     private string? email;
 
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
     private ProfileInputModel ProfileInput { get; set; } = new ProfileInputModel();
     private LanguageInputModel LanguageInput { get; set; } = new LanguageInputModel();
     private EmailInputModel EmailInput { get; set; } = new EmailInputModel();
@@ -426,30 +423,39 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (HttpContext == null)
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
         {
-            HttpContext = HttpContextAccessor.HttpContext;
+            throw new InvalidOperationException("User is not authenticated.");
         }
 
-        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-        username = await UserManager.GetUserNameAsync(user);
-        phoneNumber = await UserManager.GetPhoneNumberAsync(user);
-        nickname = user.Nickname;
-        dateOfBirth = user.DateOfBirth;
-        email = await UserManager.GetEmailAsync(user);
+        appUser = await UserManager.GetUserAsync(user);
+        if (appUser == null)
+        {
+            return;
+        }
+
+        username = await UserManager.GetUserNameAsync(appUser);
+        phoneNumber = await UserManager.GetPhoneNumberAsync(appUser);
+        nickname = appUser.Nickname;
+        dateOfBirth = appUser.DateOfBirth;
+        email = await UserManager.GetEmailAsync(appUser);
+
         languages = await DbContext.Languages.ToListAsync();
         await LoadUserLanguagesAsync();
-        hasPassword = await UserManager.HasPasswordAsync(user);
+        hasPassword = await UserManager.HasPasswordAsync(appUser);
 
         ProfileInput.Nickname ??= nickname;
         ProfileInput.PhoneNumber ??= phoneNumber;
         ProfileInput.DateOfBirth ??= dateOfBirth;
-        ProfileInput.Country ??= user.Country;
-        ProfileInput.Gender ??= user.Gender;
+        ProfileInput.Country ??= appUser.Country;
+        ProfileInput.Gender ??= appUser.Gender;
         EmailInput.NewEmail ??= email;
 
-        user.UserRatings = await DbContext.PartnerRatings
-            .Where(r => r.UserId == user.Id)
+        appUser.UserRatings = await DbContext.PartnerRatings
+            .Where(r => r.UserId == appUser.Id)
             .ToListAsync();
 
         await InvokeAsync(StateHasChanged);
@@ -457,48 +463,53 @@
 
     private async Task OnValidSubmitProfileAsync()
     {
+        if (appUser == null)
+        {
+            profileMessage = "Користувач не знайдений.";
+            return;
+        }
+
         bool needsReSignIn = false;
 
-        if (user.Nickname != ProfileInput.Nickname)
+        if (appUser.Nickname != ProfileInput.Nickname)
         {
-            user.Nickname = ProfileInput.Nickname;
+            appUser.Nickname = ProfileInput.Nickname;
             needsReSignIn = true;
         }
-        if (user.PhoneNumber != ProfileInput.PhoneNumber)
+        if (appUser.PhoneNumber != ProfileInput.PhoneNumber)
         {
-            user.PhoneNumber = ProfileInput.PhoneNumber;
+            appUser.PhoneNumber = ProfileInput.PhoneNumber;
             needsReSignIn = true;
         }
-        if (user.DateOfBirth != ProfileInput.DateOfBirth)
+        if (appUser.DateOfBirth != ProfileInput.DateOfBirth)
         {
-            user.DateOfBirth = ProfileInput.DateOfBirth;
+            appUser.DateOfBirth = ProfileInput.DateOfBirth;
             needsReSignIn = true;
         }
-        if (user.Country != ProfileInput.Country)
+        if (appUser.Country != ProfileInput.Country)
         {
-            user.Country = ProfileInput.Country;
+            appUser.Country = ProfileInput.Country;
             needsReSignIn = true;
         }
-        if (user.Gender != ProfileInput.Gender)
+        if (appUser.Gender != ProfileInput.Gender)
         {
-            user.Gender = ProfileInput.Gender;
+            appUser.Gender = ProfileInput.Gender;
             needsReSignIn = true;
         }
 
         if (needsReSignIn)
         {
-            var updateResult = await UserManager.UpdateAsync(user);
+            var updateResult = await UserManager.UpdateAsync(appUser);
             if (updateResult.Succeeded)
             {
                 try
                 {
-                    // Только обновляем сессию, если это абсолютно необходимо
-                    await SignInManager.RefreshSignInAsync(user);
+                    await SignInManager.RefreshSignInAsync(appUser);
                     profileMessage = "Ваш профіль успішно оновлено";
                 }
                 catch (Exception ex)
                 {
-                    // Логируем ошибку и сообщаем пользователю
+                    Logger.LogError("An error occurred while refreshing sign-in: {0}", ex);
                     profileMessage = "Ваш профіль успішно оновлено";
                 }
             }
@@ -517,6 +528,12 @@
 
     private async Task OnValidSubmitEmailAsync()
     {
+        if (appUser == null)
+        {
+            emailMessage = "Користувач не знайдений.";
+            return;
+        }
+
         if (EmailInput.NewEmail is null || EmailInput.NewEmail == email)
         {
             emailMessage = "Ваш email не змінився";
@@ -530,10 +547,9 @@
             return;
         }
 
-        // Обновление email и username
-        user.Email = EmailInput.NewEmail;
-        user.UserName = EmailInput.NewEmail;
-        var updateResult = await UserManager.UpdateAsync(user);
+        appUser.Email = EmailInput.NewEmail;
+        appUser.UserName = EmailInput.NewEmail;
+        var updateResult = await UserManager.UpdateAsync(appUser);
 
         if (updateResult.Succeeded)
         {
@@ -545,28 +561,31 @@
         }
     }
 
-    // Языки
     private List<Language> languages = new List<Language>();
     private List<UserLanguage> userLanguages = new List<UserLanguage>();
     private LanguageLvl selectedLanguageLvl = LanguageLvl.A1;
 
     private async Task OnValidSubmitLanguagesAsync()
     {
+        if (appUser == null || appUser.Id == null)
+        {
+            Logger.LogError("User or User ID is null");
+            return;
+        }
+
         var existingUserLanguage = await DbContext.UserLanguages
-            .FirstOrDefaultAsync(ul => ul.UserId == user.Id && ul.LanguageId == LanguageInput.LanguageId);
+            .FirstOrDefaultAsync(ul => ul.UserId == appUser.Id && ul.LanguageId == LanguageInput.LanguageId);
 
         if (existingUserLanguage != null)
         {
-            // Если запись существует, обновляем уровень владения
             existingUserLanguage.LanguageLvl = selectedLanguageLvl;
             existingUserLanguage.LanguageType = LanguageInput.LanguageType;
         }
         else
         {
-            // Если запись не существует, создаем новую
             var newUserLanguage = new UserLanguage
                 {
-                    UserId = user.Id,
+                    UserId = appUser.Id,
                     LanguageId = LanguageInput.LanguageId,
                     LanguageLvl = selectedLanguageLvl,
                     LanguageType = LanguageInput.LanguageType
@@ -574,13 +593,12 @@
             DbContext.UserLanguages.Add(newUserLanguage);
         }
 
-        // Сохраняем изменения в базе данных
         await DbContext.SaveChangesAsync();
 
-        var updateResult = await UserManager.UpdateAsync(user);
+        var updateResult = await UserManager.UpdateAsync(appUser);
         if (!updateResult.Succeeded)
         {
-            RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to update the user.", HttpContext);
+            await RedirectManager.RedirectToCurrentPageWithStatusAsync("Error: Failed to update the user.");
         }
 
         await LoadUserLanguagesAsync();
@@ -589,12 +607,17 @@
 
     private async Task LoadUserLanguagesAsync()
     {
+        if (appUser == null || appUser.Id == null)
+        {
+            Logger.LogError("User or User ID is null");
+            return;
+        }
+
         userLanguages = await DbContext.UserLanguages
-            .Where(ul => ul.UserId == user.Id)
+            .Where(ul => ul.UserId == appUser.Id)
             .Include(ul => ul.Language)
             .ToListAsync();
 
-        // Сортировка языков пользователя по типу (сначала те, которые знает, потом те, которые хочет учить)
         userLanguages = userLanguages
             .OrderByDescending(ul => ul.LanguageType == "Knows")
             .ThenBy(ul => ul.Language.LanguageName)
@@ -609,60 +632,60 @@
         StateHasChanged();
     }
 
-    // Пароль
     private string? passwordMessage;
     private bool hasPassword;
 
     private async Task OnValidSubmitPasswordAsync()
     {
-        var changePasswordResult = await UserManager.ChangePasswordAsync(user, PasswordInput.OldPassword, PasswordInput.NewPassword);
+        if (appUser == null)
+        {
+            passwordMessage = "Користувач не знайдений.";
+            return;
+        }
+
+        var changePasswordResult = await UserManager.ChangePasswordAsync(appUser, PasswordInput.OldPassword, PasswordInput.NewPassword);
         if (!changePasswordResult.Succeeded)
         {
             passwordMessage = $"Помилка: {string.Join(",", changePasswordResult.Errors.Select(error => error.Description))}";
-            StateHasChanged(); // Make sure to update the UI if you're in a Blazor component
+            StateHasChanged();
             return;
         }
 
         try
         {
-            await SignInManager.RefreshSignInAsync(user);
+            await SignInManager.RefreshSignInAsync(appUser);
             Logger.LogInformation("User changed their password successfully.");
-
-            // Redirect or inform the UI of success after all changes to response are made.
-            RedirectManager.RedirectToCurrentPageWithStatus("Your password has been changed", HttpContext);
+            await RedirectManager.RedirectToCurrentPageWithStatusAsync("Your password has been changed");
         }
         catch (Exception ex)
         {
             Logger.LogError("An error occurred: {0}", ex);
             passwordMessage = "Помилка при оновлені паролю";
-            StateHasChanged(); // Update UI to reflect the error
+            StateHasChanged();
         }
     }
 
-    // Модальное окно
     public bool IsPasswordModelOpen { get; set; }
     void OpenPasswordModal() => IsPasswordModelOpen = true;
     void ClosePasswordModal() => IsPasswordModelOpen = false;
 
-    // Аватарка
     private async Task LoadAvatar(InputFileChangeEventArgs e)
     {
-        var maxAllowedSize = 5 * 1024 * 1024; // 5 MB
+        var maxAllowedSize = 5 * 1024 * 1024;
 
         using var memoryStream = new MemoryStream();
         await e.File.OpenReadStream(maxAllowedSize).CopyToAsync(memoryStream);
 
         if (memoryStream.Length > maxAllowedSize)
         {
-            // Обработка ошибки: размер файла превышает допустимый
             return;
         }
 
         var imageBytes = memoryStream.ToArray();
         var resizedImageBytes = await ResizeImageAsync(imageBytes, 200, 200);
 
-        user.AvatarImage = resizedImageBytes;
-        await UserManager.UpdateAsync(user);
+        appUser.AvatarImage = resizedImageBytes;
+        await UserManager.UpdateAsync(appUser);
 
         StateHasChanged();
     }
@@ -678,7 +701,6 @@
         return outputStream.ToArray();
     }
 
-    // Формы
     private sealed class ProfileInputModel
     {
         [Display(Name = "Nickname")]
@@ -739,7 +761,6 @@
         public string ConfirmPassword { get; set; } = "";
     }
 
-    // Список стран для выбора
     private List<string> countries = new List<string>
     {
        "Австралія",
