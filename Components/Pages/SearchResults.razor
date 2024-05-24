@@ -223,73 +223,73 @@
     }
     else if (CurrentUser != null)
     {
-        <div class="card">
-            <div>
-                @if (CurrentUser.AvatarImage != null)
-                {
-                    <img src="@($"data:image/jpeg;base64,{Convert.ToBase64String(CurrentUser.AvatarImage)}")" alt="Avatar" />
-                }
-                else
-                {
-                    <div class="avatar-placeholder">Без аватарки</div>
-                }
-            </div>
-            <div class="info">
-                <strong>@CurrentUser.Nickname</strong> <br />
-                Країна: @(!string.IsNullOrEmpty(CurrentUser?.Country) ? CurrentUser.Country : "Невідомо") <br />
-                Стать: @(!string.IsNullOrEmpty(CurrentUser?.Gender) ? CurrentUser.Gender : "Невідомо") <br />
-                <span>Вік: @(CalculateAge(CurrentUser?.DateOfBirth)?.ToString() ?? "Невідомо")</span> <br />
-                <div class="language-info">
-                    <strong>Мови, які знає:</strong>
-                    @if (CurrentUser?.UserLanguages?.Any(ul => ul.LanguageType == "Knows") == true)
+        @if (CurrentUser != null)
+        {
+            <div class="card">
+                <div>
+                    @if (CurrentUser.AvatarImage != null)
                     {
-                        @foreach (var lang in CurrentUser?.UserLanguages?.Where(ul => ul.LanguageType == "Knows"))
-                        {
-                            <div class="language">@lang?.Language.LanguageName (@lang?.LanguageLvl.GetEnumMemberValue())</div>
-                        }
-                    }
-                    <strong>Мови, які вивчає:</strong>
-                    @if (CurrentUser?.UserLanguages != null && CurrentUser.UserLanguages.Any(ul => ul.LanguageType == "Wants to Learn"))
-                    {
-                        foreach (var lang in CurrentUser.UserLanguages.Where(ul => ul.LanguageType == "Wants to Learn"))
-                        {
-                            if (lang.Language != null && lang.LanguageLvl != null)
-                            {
-                                <div class="language">@lang.Language.LanguageName (@lang.LanguageLvl.GetEnumMemberValue())</div>
-                            }
-                        }
-                    }
-                </div>
-                <div class="rating-info">
-                    <strong>Рейтинг: </strong>
-                    @if (CurrentUser.HasRatings)
-                    {
-                        <span>@CurrentUser.AverageRating</span> <br />
-                        <span class="count">Кількість оцінок: @CurrentUser.RatingCount</span>
+                        <img src="@($"data:image/jpeg;base64,{Convert.ToBase64String(CurrentUser.AvatarImage)}")" alt="Avatar" />
                     }
                     else
                     {
-                        <span>Немає оцінок</span>
+                        <div class="avatar-placeholder">Без аватарки</div>
                     }
                 </div>
-                @if (UserChats.Any(c => (c.User1Id == CurrentUser.Id && c.User2Id == UserManager.GetUserId(authState.User)) ||
-               (c.User2Id == CurrentUser.Id && c.User1Id == UserManager.GetUserId(authState.User))))
-                {
-                    <span>Чат уже існує</span>
-                }
-                else if (invitationSent.ContainsKey(CurrentUser?.Id) && invitationSent[CurrentUser.Id])
-                {
-                    <span class="invitation-sent">Запрошено</span>
-                }
-                else
-                {
-                    <button class="btn-invite" @onclick="() => SendInvite(CurrentUser)">Запросити</button>
-                }
+                <div class="info">
+                    <strong>@CurrentUser.Nickname</strong> <br />
+                    Країна: @(!string.IsNullOrEmpty(CurrentUser?.Country) ? CurrentUser.Country : "Невідомо") <br />
+                    Стать: @(!string.IsNullOrEmpty(CurrentUser?.Gender) ? CurrentUser.Gender : "Невідомо") <br />
+                    <span>Вік: @(CalculateAge(CurrentUser?.DateOfBirth)?.ToString() ?? "Невідомо")</span> <br />
+                    <div class="language-info">
+                        <strong>Мови, які знає:</strong>
+                        @if (CurrentUser?.UserLanguages?.Any(ul => ul.LanguageType == "Knows") == true)
+                        {
+                            @foreach (var lang in CurrentUser?.UserLanguages?.Where(ul => ul.LanguageType == "Knows") ?? Enumerable.Empty<UserLanguage>())
+                            {
+                                <div class="language">@lang?.Language?.LanguageName (@lang?.LanguageLvl.GetEnumMemberValue())</div>
+                            }
+                        }
+                        <strong>Мови, які вивчає:</strong>
+                        @if (CurrentUser?.UserLanguages?.Any(ul => ul.LanguageType == "Wants to Learn") == true)
+                        {
+                            @foreach (var lang in CurrentUser?.UserLanguages?.Where(ul => ul.LanguageType == "Wants to Learn") ?? Enumerable.Empty<UserLanguage>())
+                            {
+                                <div class="language">@lang?.Language?.LanguageName (@lang?.LanguageLvl.GetEnumMemberValue())</div>
+                            }
+                        }
+                    </div>
+                    <div class="rating-info">
+                        <strong>Рейтинг: </strong>
+                        @if (CurrentUser.HasRatings)
+                        {
+                            <span>@CurrentUser.AverageRating</span> <br />
+                            <span class="count">Кількість оцінок: @CurrentUser.RatingCount</span>
+                        }
+                        else
+                        {
+                            <span>Немає оцінок</span>
+                        }
+                    </div>
+                    @if (UserChats.Any(c => (c.User1Id == CurrentUser.Id && c.User2Id == UserManager.GetUserId(authState.User)) ||
+                   (c.User2Id == CurrentUser.Id && c.User1Id == UserManager.GetUserId(authState.User))))
+                    {
+                        <span>Чат уже існує</span>
+                    }
+                    else if (invitationSent.ContainsKey(CurrentUser?.Id) && invitationSent[CurrentUser.Id])
+                    {
+                        <span class="invitation-sent">Запрошено</span>
+                    }
+                    else
+                    {
+                        <button class="btn-invite" @onclick="() => SendInvite(CurrentUser)">Запросити</button>
+                    }
+                </div>
             </div>
-        </div>
-        @if (!isLoading && searchMessage != "Партнерів більше не знайдено.")
-        {
-            <button class="btn-find-more" @onclick="FindMoreAsync">Знайти ще</button>
+            @if (!isLoading && searchMessage != "Партнерів більше не знайдено.")
+            {
+                <button class="btn-find-more" @onclick="FindMoreAsync">Знайти ще</button>
+            }
         }
     }
 </div>
@@ -303,7 +303,7 @@
     private List<Chat> UserChats = new List<Chat>();
     private Dictionary<string, bool> invitationSent = new Dictionary<string, bool>();
 
-    private ApplicationUser CurrentUser;
+    private ApplicationUser? CurrentUser;
     private int currentIndex = 0;
     private string searchMessage = string.Empty;
     private bool isLoading = false;
@@ -329,7 +329,7 @@
         Users = await DbContext.Users
             .Where(u => userIdList.Contains(u.Id) && u.Id != UserManager.GetUserId(user))
             .Include(u => u.UserLanguages)
-            .Include(u => u.UserRatings)
+                .ThenInclude(ul => ul.Language)
             .ToListAsync();
 
         if (Users.Any())

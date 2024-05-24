@@ -370,11 +370,18 @@
         DbContext.Notifications.Remove(notification);
         await DbContext.SaveChangesAsync();
 
+        var receiverUser = await UserManager.FindByIdAsync(notification.ReceiverId);
+        if (receiverUser == null)
+        {
+            Console.WriteLine("Error: Receiver user not found.");
+            return;
+        }
+
         var declineNotification = new Notification
             {
                 SenderId = notification.ReceiverId,
                 ReceiverId = notification.SenderId,
-                Message = $"Ваше запрошення до {UserManager.FindByIdAsync(notification.ReceiverId).Result.UserName} було відхилено.",
+                Message = $"Ваше запрошення до {receiverUser.UserName} було відхилено.",
                 Status = "Declined"
             };
 
@@ -409,11 +416,18 @@
         {
             if (notification.Status == "Pending")
             {
+                var receiverUser = await UserManager.FindByIdAsync(notification.ReceiverId);
+                if (receiverUser == null)
+                {
+                    Console.WriteLine("Error: Receiver user not found.");
+                    continue;
+                }
+
                 var declineNotification = new Notification
                     {
                         SenderId = notification.ReceiverId,
                         ReceiverId = notification.SenderId,
-                        Message = $"Ваше запрошення до {UserManager.FindByIdAsync(notification.ReceiverId).Result.UserName} було відхилено.",
+                        Message = $"Ваше запрошення до {receiverUser.UserName} було відхилено.",
                         Status = "Declined",
                         UserInfo = string.Empty
                     };

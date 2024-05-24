@@ -258,10 +258,30 @@
                         <div>
                             <label for="ageFrom" style="font-size: 2vh;">Вік від: @ageFrom</label>
                             <input type="range" id="ageFrom" min="18" max="100" value="@ageFrom" @oninput="UpdateAgeFrom" class="slider age-from">
+                            <script>
+                                function UpdateAgeFrom(event) {
+                                    const ageFromSlider = event.target;
+                                    const ageToSlider = document.querySelector('.age-to');
+                                    if (ageFromSlider && ageToSlider) {
+                                        updateRange();
+                                        DotNet.invokeMethodAsync('YourAssemblyName', 'UpdateAgeFrom', ageFromSlider.value);
+                                    }
+                                }
+                            </script>
                         </div>
                         <div>
                             <label for="ageTo" style="font-size: 2vh;">Вік до: @ageTo</label>
                             <input type="range" id="ageTo" min="18" max="100" value="@ageTo" @oninput="UpdateAgeTo" class="slider age-to">
+                            <script>
+                                function UpdateAgeTo(event) {
+                                    const ageFromSlider = document.querySelector('.age-from');
+                                    const ageToSlider = event.target;
+                                    if (ageFromSlider && ageToSlider) {
+                                        updateRange();
+                                        DotNet.invokeMethodAsync('YourAssemblyName', 'UpdateAgeTo', ageToSlider.value);
+                                    }
+                                }
+                            </script>
                         </div>
                     </div>
                 </div>
@@ -522,6 +542,27 @@
             NavigationManager.NavigateTo($"search-results/{string.Join(",", userIds)}");
         }
     }
+
+    public async Task UpdateAgeFrom(int value)
+    {
+        ageFrom = value;
+        if (ageFrom > ageTo)
+        {
+            ageTo = ageFrom;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async Task UpdateAgeTo(int value)
+    {
+        ageTo = value;
+        if (ageTo < ageFrom)
+        {
+            ageFrom = ageTo;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
 }
 
 @* Для ползуников возраста *@
@@ -530,19 +571,23 @@
     var ageToSlider = document.querySelector('.age-to');
 
     function updateRange() {
-        if (parseInt(ageFromSlider.value) > parseInt(ageToSlider.value)) {
-            ageToSlider.value = ageFromSlider.value;
-        }
-        if (parseInt(ageToSlider.value) < parseInt(ageFromSlider.value)) {
-            ageFromSlider.value = ageToSlider.value;
+        if (ageFromSlider && ageToSlider) {
+            if (parseInt(ageFromSlider.value) > parseInt(ageToSlider.value)) {
+                ageToSlider.value = ageFromSlider.value;
+            }
+            if (parseInt(ageToSlider.value) < parseInt(ageFromSlider.value)) {
+                ageFromSlider.value = ageToSlider.value;
+            }
         }
     }
 
-    ageFromSlider.oninput = function () {
-        updateRange();
-    }
-    ageToSlider.oninput = function () {
-        updateRange();
+    if (ageFromSlider && ageToSlider) {
+        ageFromSlider.oninput = function () {
+            updateRange();
+        }
+        ageToSlider.oninput = function () {
+            updateRange();
+        }
     }
 </script>
 

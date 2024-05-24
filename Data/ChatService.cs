@@ -99,7 +99,6 @@ namespace LangPrac.Services
 
                 _context.PartnerRatings.Add(ratingEntry);
 
-                // Обновляем уведомление
                 var notification = await _context.Notifications.FindAsync(notificationId);
                 if (notification != null)
                 {
@@ -204,6 +203,11 @@ namespace LangPrac.Services
                 _context.Chats.Remove(chat);
                 await _context.SaveChangesAsync();
             }
+            else
+            {
+                throw new InvalidOperationException("Chat not found.");
+            }
         }
+
     }
 }

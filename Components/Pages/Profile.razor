@@ -205,7 +205,7 @@
                         else
                         {
                             <div class="avatar-placeholder">
-                                <span>Завантажити аватар</span>
+                                <span style="font-size: 1em">Завантажити аватар</span>
                             </div>
                         }
                         <InputFile OnChange="@LoadAvatar" accept="image/*" class="avatar-input" />
@@ -268,17 +268,18 @@
                                 <label for="language-type" class="form-label">Тип мови</label>
                                 <ValidationMessage For="() => LanguageInput.LanguageType" class="text-danger" />
                             </div>
-                        <div class="form-floating mb-3">
-                            <InputSelect @bind-Value="LanguageInput.LanguageId" class="form-control">
-                                <option value="">Оберіть мову</option>
-                                @foreach (var language in languages)
-                                {
-                                    <option value="@language.LanguageId">@language.LanguageName</option>
-                                }
-                            </InputSelect>
-                            <label for="language" class="form-label">Мова</label>
-                            <ValidationMessage For="() => LanguageInput.LanguageId" class="text-danger" />
-                        </div>
+                            <ValidationSummary class="text-danger" role="alert" />
+                            <div class="form-floating mb-3">
+                                <InputSelect @bind-Value="LanguageInput.LanguageId" class="form-control" required>
+                                    <option value="">Оберіть мову</option>
+                                    @foreach (var language in languages)
+                                    {
+                                        <option value="@language.LanguageId">@language.LanguageName</option>
+                                    }
+                                </InputSelect>
+                                <label for="language" class="form-label">Мова</label>
+                                <ValidationMessage For="() => LanguageInput.LanguageId" class="text-danger" />
+                            </div>
                             <div class="form-floating mb-3">
                                 <select @bind="selectedLanguageLvl" class="form-control">
                                     @foreach (var lvl in Enum.GetValues(typeof(LanguageLvl)))
@@ -361,8 +362,8 @@
                             <ValidationMessage For="() => EmailInput.NewEmail" class="text-danger" />
                         </div>
                         <button type="submit" class="w-100 btn btn-lg btn-primary">Змінити електронну пошту</button>
-                        <button class="btn btn-info" @onclick="OpenPasswordModal">Керування паролем</button>
                     </EditForm>
+                    <button class="btn btn-info" @onclick="OpenPasswordModal">Керування паролем</button>
                 </div>
             </div>
 
@@ -391,7 +392,7 @@
                                     <label for="confirm-password" class="form-label">Підтвердіть пароль</label>
                                     <ValidationMessage For="() => PasswordInput.ConfirmPassword" class="text-danger" />
                                 </div>
-                                <button type="submit" class="w-100 btn btn-lg btn-primary">Оновити пароль</button>
+                            <button type="submit" class="w-100 btn btn-lg btn-primary">Оновити пароль</button>
                             </EditForm>
                         </div>
                     </div>
@@ -573,6 +574,12 @@
             return;
         }
 
+        if (LanguageInput.LanguageId == 0)
+        {
+            Logger.LogError("LanguageId is not selected");
+            return;
+        }
+
         var existingUserLanguage = await DbContext.UserLanguages
             .FirstOrDefaultAsync(ul => ul.UserId == appUser.Id && ul.LanguageId == LanguageInput.LanguageId);
 
@@ -604,6 +611,7 @@
         await LoadUserLanguagesAsync();
         StateHasChanged();
     }
+
 
     private async Task LoadUserLanguagesAsync()
     {

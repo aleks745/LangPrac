@@ -573,7 +573,6 @@
         await hubConnection.InvokeAsync("MarkMessageAsRead", int.Parse(ChatId), CurrentUserId);
     }
 
-    [JSInvokable]
     public async Task SendMessage()
     {
         if (!string.IsNullOrWhiteSpace(NewMessage))
