@@ -168,25 +168,35 @@
 
     public async Task RegisterUser(EditContext editContext)
     {
+        // Створює нового користувача
         var user = CreateUser();
 
+        // Встановлює ім'я користувача (email) для нового користувача
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+
+        // Отримує email сховище для подальшого використання
         var emailStore = GetEmailStore();
+
+        // Встановлює email для нового користувача
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
 
+        // Встановлює нікнейм для нового користувача
         user.Nickname = Input.Nickname;
 
+        // Створює нового користувача з паролем
         var result = await UserManager.CreateAsync(user, Input.Password);
 
+        // Якщо створення користувача не вдалось, зберігає помилки і завершує виконання
         if (!result.Succeeded)
         {
             identityErrors = result.Errors;
             return;
         }
 
+        // Логує інформацію про успішне створення нового користувача
         Logger.LogInformation("User created a new account with password.");
 
-        // Теперь пользователь сразу перенаправляется на страницу входа
+        // Перенаправляє користувача на сторінку входу з параметром успішної реєстрації
         RedirectManager.RedirectTo("Account/Login", new Dictionary<string, object?> { ["RegistrationSuccess"] = true });
     }
 
@@ -194,10 +204,12 @@
     {
         try
         {
+            // Створює новий екземпляр класу ApplicationUser
             return Activator.CreateInstance<ApplicationUser>();
         }
         catch
         {
+            // Викидає виключення, якщо не вдається створити екземпляр класу ApplicationUser
             throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
                 $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
         }

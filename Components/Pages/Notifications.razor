@@ -351,16 +351,25 @@
 
     private async Task AcceptInvite(int notificationId)
     {
+        // Знаходить сповіщення в базі даних за його ідентифікатором
         var notification = await DbContext.Notifications.FindAsync(notificationId);
+
+        // Якщо сповіщення існує
         if (notification != null)
         {
+            // Створює новий чат між відправником сповіщення та одержувачем
             var chat = await ChatService.CreateChatAsync(notification.SenderId, notification.ReceiverId);
+
+            // Оновлює статус сповіщення на "Прийнято"
             notification.Status = "Accepted";
 
+            // Зберігає зміни в базі даних
             await DbContext.SaveChangesAsync();
 
+            // Створює нове сповіщення про підтвердження створення чату для відправника
             await ChatService.CreateChatConfirmationNotification(notification.ReceiverId, notification.SenderId);
 
+            // Переходить на сторінку створеного чату
             NavigationManager.NavigateTo($"/chat/{chat.Id}");
         }
     }

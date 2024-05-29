@@ -180,16 +180,18 @@
 
     public async Task LoginUser()
     {
+        // Спроба авторизації користувача за допомогою введеного email і пароля, з опцією запам'ятовування сесії
         var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
-        if (result.Succeeded)
+
+        if (result.Succeeded) // Якщо авторизація успішна
         {
-            Logger.LogInformation("User logged in.");
-            RedirectManager.RedirectTo(ReturnUrl);
+            Logger.LogInformation("User logged in."); // Логування успішної авторизації
+            RedirectManager.RedirectTo(ReturnUrl); // Перенаправлення користувача на зазначену URL-адресу
         }
-        else
+        else // Якщо авторизація неуспішна
         {
-            Logger.LogWarning("User login attempt failed.");
-            errorMessage = "Невірний логін або пароль";
+            Logger.LogWarning("User login attempt failed."); // Логування невдалої спроби авторизації
+            errorMessage = "Невірний логін або пароль"; // Встановлення повідомлення про помилку
         }
     }
 

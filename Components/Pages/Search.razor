@@ -394,15 +394,18 @@
 
     private async Task QuickSearchAsync()
     {
+        // Отримання стану аутентифікації користувача.
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
+        // Перевірка, чи автентифікований користувач.
         if (user.Identity?.IsAuthenticated != true)
         {
             searchMessage = "Користувач не автентифікований.";
             return;
         }
 
+        // Отримання інформації про поточного автентифікованого користувача з UserManager.
         var appUser = await UserManager.GetUserAsync(user);
         if (appUser == null)
         {
@@ -410,22 +413,26 @@
             return;
         }
 
+        // Отримання списку мов, які користувач знає.
         var knownLanguages = userLanguages
             .Where(ul => ul.LanguageType == "Knows")
             .Select(ul => ul.LanguageId)
             .ToList();
 
+        // Отримання списку мов, які користувач хоче вивчати.
         var wantsToLearnLanguages = userLanguages
             .Where(ul => ul.LanguageType == "Wants to Learn")
             .Select(ul => ul.LanguageId)
             .ToList();
 
+        // Перевірка, чи користувач вказав мови, які знає та які хоче вивчати.
         if (!knownLanguages.Any() || !wantsToLearnLanguages.Any())
         {
             searchMessage = "Будь ласка, додайте мови, які ви знаєте, і мови, які хочете вивчати.";
             return;
         }
 
+        // Пошук користувачів, які відповідають критеріям (знають мови, які користувач хоче вивчати, і хочуть вивчати мови, які користувач знає).
         var searchResults = await DbContext.Users
             .Where(u => u.Id != appUser.Id)
             .Where(u => u.UserLanguages.Any(ul =>
@@ -434,12 +441,14 @@
                 knownLanguages.Contains(ul.LanguageId) && ul.LanguageType == "Wants to Learn"))
             .ToListAsync();
 
+        // Перевірка наявності результатів пошуку.
         if (searchResults.Count == 0)
         {
             searchMessage = "Не знайдено відповідних партнерів.";
         }
         else
         {
+            // Перехід на сторінку з результатами пошуку.
             var userIds = searchResults.Select(u => u.Id).ToList();
             NavigationManager.NavigateTo($"search-results/{string.Join(",", userIds)}");
         }
@@ -447,45 +456,53 @@
 
     private async Task AdvancedSearchAsync()
     {
+        // Отримання стану автентифікації користувача
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
+        // Перевірка, чи автентифікований користувач
         if (user.Identity?.IsAuthenticated != true)
         {
-            searchMessage = "Користувач не автентифікований.";
+            searchMessage = "Користувач не автентифікований."; // Повідомлення, якщо користувач не автентифікований
             return;
         }
 
+        // Отримання даних про автентифікованого користувача
         var appUser = await UserManager.GetUserAsync(user);
         if (appUser == null)
         {
-            searchMessage = "Користувач не знайдений.";
+            searchMessage = "Користувач не знайдений."; // Повідомлення, якщо користувач не знайдений
             return;
         }
 
+        // Отримання мов, які користувач знає
         var knownLanguages = userLanguages
             .Where(ul => ul.LanguageType == "Knows")
             .Select(ul => ul.LanguageId)
             .ToList();
 
+        // Отримання мов, які користувач хоче вивчати
         var wantsToLearnLanguages = userLanguages
             .Where(ul => ul.LanguageType == "Wants to Learn")
             .Select(ul => ul.LanguageId)
             .ToList();
 
+        // Перевірка наявності мов, які користувач знає та хоче вивчати
         if (!knownLanguages.Any() || !wantsToLearnLanguages.Any())
         {
-            searchMessage = "Будь ласка, додайте мови, які ви знаєте, і мови, які хочете вивчати.";
+            searchMessage = "Будь ласка, додайте мови, які ви знаєте, і мови, які хочете вивчати."; // Повідомлення про необхідність додати мови
             return;
         }
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = DateOnly.FromDateTime(DateTime.Today); // Поточна дата
 
+        // Отримання всіх користувачів з бази даних, крім поточного користувача
         var allUsers = await DbContext.Users
             .Include(u => u.UserLanguages)
             .Where(u => u.Id != appUser.Id)
             .ToListAsync();
 
+        // Фільтрація користувачів за обраними мовами та рівнем знань
         var filteredUsers = allUsers
             .Where(u => u.UserLanguages.Any(ul => ul.LanguageId == selectedLanguageId &&
                                                   ul.LanguageType == "Knows" &&
@@ -493,6 +510,7 @@
                                                   ul.LanguageLvl <= partnerLanguageLevelTo))
             .ToList();
 
+        // Мови, які знає поточний користувач
         var userKnowsLanguages = appUser.UserLanguages
             .Where(ul => ul.LanguageType == "Knows")
             .Select(ul => ul.LanguageId)
@@ -500,6 +518,7 @@
 
         var tempFilteredUsers = new List<ApplicationUser>();
 
+        // Додаткова фільтрація користувачів за мовами, які вони хочуть вивчати
         foreach (var u in filteredUsers)
         {
             var userWantsToLearn = u.UserLanguages
@@ -515,6 +534,7 @@
 
         filteredUsers = tempFilteredUsers;
 
+        // Фільтрація користувачів за віковим діапазоном
         if (!anyAgeSelected)
         {
             filteredUsers = filteredUsers.Where(u => u.DateOfBirth.HasValue &&
@@ -523,6 +543,7 @@
                                          .ToList();
         }
 
+        // Фільтрація користувачів за статтю
         if (!string.IsNullOrEmpty(selectedGender) && selectedGender != "Any")
         {
             filteredUsers = filteredUsers.Where(u => u.Gender == selectedGender).ToList();
@@ -532,12 +553,14 @@
             filteredUsers = filteredUsers.Where(u => string.IsNullOrEmpty(u.Gender) || u.Gender == "Unknown" || u.Gender == "Чоловіча" || u.Gender == "Жіноча" || u.Gender == "Інше").ToList();
         }
 
+        // Повідомлення, якщо не знайдено відповідних партнерів
         if (filteredUsers.Count == 0)
         {
             searchMessage = "Не знайдено відповідних партнерів.";
         }
         else
         {
+            // Перехід до сторінки з результатами пошуку
             var userIds = filteredUsers.Select(u => u.Id).ToList();
             NavigationManager.NavigateTo($"search-results/{string.Join(",", userIds)}");
         }
