@@ -330,6 +330,19 @@
             .Where(u => userIdList.Contains(u.Id) && u.Id != UserManager.GetUserId(user))
             .Include(u => u.UserLanguages)
                 .ThenInclude(ul => ul.Language)
+            .Include(u => u.UserRatings)
+            .Select(u => new ApplicationUser
+                {
+                    Id = u.Id,
+                    Nickname = u.Nickname,
+                    Country = u.Country,
+                    Gender = u.Gender,
+                    DateOfBirth = u.DateOfBirth,
+                    AvatarImage = u.AvatarImage,
+                    UserLanguages = u.UserLanguages,
+                    UserRatings = u.UserRatings
+                })
+            .AsNoTracking()
             .ToListAsync();
 
         if (Users.Any())

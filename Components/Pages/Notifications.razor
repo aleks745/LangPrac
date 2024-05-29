@@ -285,7 +285,7 @@
                     <button class="btn btn-success" @onclick="() => AcceptInvite(notification.Id)">Прийняти заявку</button>
                     <button class="btn btn-danger" @onclick="() => DeclineInvite(notification)">Відхилити заявку</button>
                 }
-                <p class="timestamp">Відправлено: @notification.CreatedAt.ToLocalTime().AddHours(3).ToString("HH:mm")</p>
+                <p class="timestamp">Відправлено: @notification.CreatedAt.ToLocalTime().AddHours(3).ToString("dd MMMM HH:mm", new System.Globalization.CultureInfo("uk-UA"))</p>
             </div>
         }
     }

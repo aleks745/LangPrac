@@ -338,9 +338,18 @@
         return string.Empty;
     }
 
-    private void NavigateToChat(int chatId)
+    private async Task NavigateToChat(int chatId)
     {
-        NavigationManager.NavigateTo($"/chat/{chatId}");
+        var chat = await ChatService.GetChatAsync(chatId, CurrentUserId);
+        if (chat == null)
+        {
+            // Перенаправляем на страницу уведомлений, если чат был удален
+            NavigationManager.NavigateTo("/notifications");
+        }
+        else
+        {
+            NavigationManager.NavigateTo($"/chat/{chatId}");
+        }
     }
 
     private void ShowEndPracticeModal(int chatId)
