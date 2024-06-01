@@ -186,6 +186,9 @@
             font-size: 2vh;
         }
 
+    .hidden-option {
+        display: none;
+    }
 </style>
 
 <PageTitle>LаngPrac</PageTitle>
@@ -261,7 +264,7 @@
                             <ValidationSummary class="text-danger" role="alert" />
                             <div class="form-floating mb-3">
                                 <InputSelect @bind-Value="LanguageInput.LanguageType" class="form-control">
-                                <option value="">Оберіть тип мови</option>
+                                    <option value="" class="hidden-option">Оберіть тип мови</option>
                                     <option value="Knows">Знаю</option>
                                     <option value="Wants to Learn">Хочу вивчати</option>
                                 </InputSelect>
@@ -271,7 +274,7 @@
                             <ValidationSummary class="text-danger" role="alert" />
                             <div class="form-floating mb-3">
                                 <InputSelect @bind-Value="LanguageInput.LanguageId" class="form-control" required>
-                                    <option value="">Оберіть мову</option>
+                                    <option value="" class="hidden-option">Оберіть мову</option>
                                     @foreach (var language in languages)
                                     {
                                         <option value="@language.LanguageId">@language.LanguageName</option>

@@ -236,7 +236,7 @@
         public string Nickname { get; set; } = "";
 
         [Required]
-        [StringLength(100, ErrorMessage = "Довжина {0} має бути не менше {2} і не більше {1} символів.", MinimumLength = 6)]
+        [StringLength(100, ErrorMessage = "Пароль повинен бути не менше {2} символів.", MinimumLength = 4)]
         [DataType(DataType.Password)]
         [Display(Name = "Password")]
         public string Password { get; set; } = "";
