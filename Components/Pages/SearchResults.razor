@@ -9,6 +9,7 @@
 @inject NavigationManager NavigationManager
 @inject ApplicationDbContext DbContext
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
 
 <style>
     body {
@@ -41,6 +42,63 @@
         position: relative;
     }
 
+    .header-buttons {
+        position: absolute;
+        top: 1vh;
+        right: 2vw;
+        display: flex;
+        align-items: center;
+    }
+
+    .scroll-toggle-container {
+        display: flex;
+        align-items: center;
+        margin-right: 1vw;
+    }
+
+    .scroll-toggle-container input[type="checkbox"] {
+        display: none;
+    }
+
+    .scroll-toggle-container .scroll-toggle-label {
+        width: 2.5vh;
+        height: 2.5vh;
+        background-color: #007bff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .scroll-toggle-container .scroll-toggle-label:hover {
+        background-color: #0056b3;
+    }
+
+    .scroll-toggle-container input[type="checkbox"]:checked + .scroll-toggle-label {
+        background-color: #28a745;
+    }
+
+    .scroll-toggle-container .scroll-toggle-label svg {
+        fill: white;
+    }
+
+    .back-to-search {
+        padding: 0.7vh 1.3vw;
+        background-color: #1a8ec2;
+        color: white;
+        border-radius: 0.7vh;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 0.3vh 0.5vh rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s;
+    }
+
+    .back-to-search:hover {
+        background-color: #167aa5;
+    }
+
     .card {
         display: flex;
         flex-direction: column;
@@ -53,22 +111,22 @@
         border: 0.2vh solid #ffffff;
     }
 
-        .card img {
-            width: 6vw;
-            height: 6vw;
-            border-radius: 50%;
-            margin-bottom: 1.3vh;
-            box-shadow: 0 0.3vh 0.5vh rgba(0, 0, 0, 0.2);
-        }
+    .card img {
+        width: 6vw;
+        height: 6vw;
+        border-radius: 50%;
+        margin-bottom: 1.3vh;
+        box-shadow: 0 0.3vh 0.5vh rgba(0, 0, 0, 0.2);
+    }
 
-        .card div {
-            flex-grow: 1;
-        }
+    .card div {
+        flex-grow: 1;
+    }
 
-        .card .info {
-            text-align: center;
-            font-size: 1.9vh;
-        }
+    .card .info {
+        text-align: center;
+        font-size: 1.9vh;
+    }
 
     .avatar-placeholder {
         display: flex;
@@ -91,9 +149,9 @@
         transition: background-color 0.3s;
     }
 
-        .btn-invite:hover {
-            background-color: #45a049;
-        }
+    .btn-invite:hover {
+        background-color: #45a049;
+    }
 
     .btn-find-more {
         padding: 1.1vh 2.1vw;
@@ -108,9 +166,9 @@
         transition: background-color 0.3s;
     }
 
-        .btn-find-more:hover {
-            background-color: #E36847;
-        }
+    .btn-find-more:hover {
+        background-color: #E36847;
+    }
 
     .no-more-partners {
         color: #ffd700;
@@ -118,24 +176,6 @@
         padding: 1.3vh;
         font-size: 2.1vh;
     }
-
-    .back-to-search {
-        position: absolute;
-        top: 1.3vh;
-        right: 1.3vw;
-        padding: 0.7vh 1.3vw;
-        background-color: #1a8ec2;
-        color: white;
-        border-radius: 0.7vh;
-        cursor: pointer;
-        border: none;
-        box-shadow: 0 0.3vh 0.5vh rgba(0, 0, 0, 0.2);
-        transition: background-color 0.3s;
-    }
-
-        .back-to-search:hover {
-            background-color: #167aa5;
-        }
 
     .language-info {
         text-align: left;
@@ -183,9 +223,9 @@
         color: #ffd700;
     }
 
-        .rating-info .count {
-            color: #ffffff;
-        }
+    .rating-info .count {
+        color: #ffffff;
+    }
 
     /* Safari */
     @@-webkit-keyframes spin {
@@ -212,7 +252,20 @@
 <PageTitle>LаngPrac</PageTitle>
 
 <div class="results-container">
-    <button class="back-to-search" @onclick="GoBack">Назад</button>
+    @if (!isLoading)
+    {
+        <div class="header-buttons">
+            <div class="scroll-toggle-container">
+                <input type="checkbox" id="scrollToggle" @onchange="ToggleScroll" />
+                <label for="scrollToggle" class="scroll-toggle-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="2.5vh" height="2.5vh">
+                        <path d="M12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="currentColor" />
+                    </svg>
+                </label>
+            </div>
+            <button class="back-to-search" @onclick="GoBack">Назад</button>
+        </div>
+    }
     @if (!string.IsNullOrEmpty(searchMessage) && searchMessage == "Партнерів більше не знайдено.")
     {
         <div class="no-more-partners">@searchMessage</div>
@@ -358,6 +411,11 @@
         UpdateState();
     }
 
+    private async Task ToggleScroll(ChangeEventArgs e)
+    {
+        await JS.InvokeVoidAsync("toggleScroll");
+    }
+
     private void GoBack()
     {
         NavigationManager.NavigateTo("/search");
@@ -415,3 +473,14 @@
         }
     }
 }
+
+<script>
+    window.toggleScroll = () => {
+        const body = document.body;
+        if (body.style.overflowY === 'hidden') {
+            body.style.overflowY = 'auto';
+        } else {
+            body.style.overflowY = 'hidden';
+        }
+    };
+</script>
